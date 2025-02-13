@@ -1,0 +1,605 @@
+{
+  "timestamp": "2025-01-03T21:49:34.220043",
+  "tokens": [
+    {
+      "liquidity": 29589435.82243,
+      "price": 0.0483069258046599,
+      "ticker": "MIN",
+      "unit": "29d222ce763455e3d7a09a665ce554f00ac89d2e99a1a83d267170c64d494e"
+    },
+    {
+      "liquidity": 18612871.32955107,
+      "price": 0.006708698757790605,
+      "ticker": "SNEK",
+      "unit": "279c909f348e533da5808898f87f9a14bb2c3dfbbacccd631d927a3f534e454b"
+    },
+    {
+      "liquidity": 6051506.142893588,
+      "price": 0.18381742864716363,
+      "ticker": "SPLASH",
+      "unit": "ececc92aeaaac1f5b665f567b01baec8bc2771804b4c21716a87a4e353504c415348"
+    },
+    {
+      "liquidity": 5989391.987666819,
+      "price": 0.28491545764502985,
+      "ticker": "IAG",
+      "unit": "5d16cc1a177b5d9ba9cfa9793b07e60f1fb70fea1f8aef064415d114494147"
+    },
+    {
+      "liquidity": 5959849.405204,
+      "price": 0.013300719036246932,
+      "ticker": "SUNDAE",
+      "unit": "9a9693a9a37912a5097918f97918d15240c92ab729a0b7c4aa144d7753554e444145"
+    },
+    {
+      "liquidity": 5726630.709702,
+      "price": 0.4341880075643576,
+      "ticker": "FLDT",
+      "unit": "577f0b1342f8f8f4aed3388b80a8535812950c7a892495c0ecdf0f1e0014df10464c4454"
+    },
+    {
+      "liquidity": 5573105.2278700005,
+      "price": 0.43389355091624016,
+      "ticker": "WMTX",
+      "unit": "e5a42a1a1d3d1da71b0449663c32798725888d2eb0843c4dabeca05a576f726c644d6f62696c65546f6b656e58"
+    },
+    {
+      "liquidity": 5025913.315274,
+      "price": 1.2165255470774092,
+      "ticker": "SHEN",
+      "unit": "8db269c3ec630e06ae29f74bc39edd1f87c819f1056206e879a1cd615368656e4d6963726f555344"
+    },
+    {
+      "liquidity": 3682944.311086,
+      "price": 1.8858153467528385,
+      "ticker": "INDY",
+      "unit": "533bb94a8850ee3ccbe483106489399112b74c905342cb1792a797a0494e4459"
+    },
+    {
+      "liquidity": 3560368.0054610055,
+      "price": 1.4559708751623759,
+      "ticker": "BTN",
+      "unit": "016be5325fd988fea98ad422fcfd53e5352cacfced5c106a932a35a442544e"
+    },
+    {
+      "liquidity": 3174637.2209382616,
+      "price": 2.10601123926e-07,
+      "ticker": "HOSKY",
+      "unit": "a0028f350aaabe0545fdcb56b039bfb08e4bb4d8c4d7c3c7d481c235484f534b59"
+    },
+    {
+      "liquidity": 2885220.452145366,
+      "price": 0.017156984033959835,
+      "ticker": "STUFF",
+      "unit": "51a5e236c4de3af2b8020442e2a26f454fda3b04cb621c1294a0ef34424f4f4b"
+    },
+    {
+      "liquidity": 2851866.9197030645,
+      "price": 0.2461407093248963,
+      "ticker": "HUNT",
+      "unit": "95a427e384527065f2f8946f5e86320d0117839a5e98ea2c0b55fb0048554e54"
+    },
+    {
+      "liquidity": 2831220.0271959994,
+      "price": 2.0118447385457743,
+      "ticker": "LENFI",
+      "unit": "8fef2d34078659493ce161a6c7fba4b56afefa8535296a5743f6958741414441"
+    },
+    {
+      "liquidity": 2712783.133252,
+      "price": 5.66371958726147,
+      "ticker": "LQ",
+      "unit": "da8c30857834c6ae7203935b89278c532b3995245295456f993e1d244c51"
+    },
+    {
+      "liquidity": 2638972.362352,
+      "price": 0.03897517078966699,
+      "ticker": "NTX",
+      "unit": "edfd7a1d77bcb8b884c474bdc92a16002d1fb720e454fa6e993444794e5458"
+    },
+    {
+      "liquidity": 2579121.849002,
+      "price": 0.0361166301034372,
+      "ticker": "COPI",
+      "unit": "b6a7467ea1deb012808ef4e87b5ff371e85f7142d7b356a40d9b42a0436f726e75636f70696173205b76696120436861696e506f72742e696f5d"
+    },
+    {
+      "liquidity": 2208513.6175380005,
+      "price": 0.9228864762785005,
+      "ticker": "iUSD",
+      "unit": "f66d78b4a3cb3d37afa0ec36461e51ecbde00f26c8f0a68f94b6988069555344"
+    },
+    {
+      "liquidity": 2109487.6771354945,
+      "price": 0.9317460769041876,
+      "ticker": "USDM",
+      "unit": "c48cbb3d5e57ed56e276bc45f99ab39abe94e6cd7ac39fb402da47ad0014df105553444d"
+    },
+    {
+      "liquidity": 2100400.560768,
+      "price": 0.4592285471384595,
+      "ticker": "WMT",
+      "unit": "1d7f33bd23d85e1a25d87d86fac4f199c3197a2f7afeb662a0f34e1e776f726c646d6f62696c65746f6b656e"
+    },
+    {
+      "liquidity": 1833467.10933,
+      "price": 1.8242152589694776,
+      "ticker": "rsERG",
+      "unit": "04b95368393c821f180deee8229fbd941baaf9bd748ebcdbf7adbb147273455247"
+    },
+    {
+      "liquidity": 1706597.072936412,
+      "price": 0.5903040320597724,
+      "ticker": "AGIX",
+      "unit": "f43a62fdc3965df486de8a0d32fe800963589c41b38946602a0dc53541474958"
+    },
+    {
+      "liquidity": 1705041.1807056745,
+      "price": 1.2593388025924148,
+      "ticker": "NVL",
+      "unit": "5b26e685cc5c9ad630bde3e3cd48c694436671f3d25df53777ca60ef4e564c"
+    },
+    {
+      "liquidity": 1459596.4134920002,
+      "price": 1.3898879457551008,
+      "ticker": "FET",
+      "unit": "e824c0011176f0926ad51f492bcc63ac6a03a589653520839dc7e3d9464554"
+    },
+    {
+      "liquidity": 1442434.431908,
+      "price": 0.019692281210148623,
+      "ticker": "CHAD",
+      "unit": "97075bf380e65f3c63fb733267adbb7d42eec574428a754d2abca55b436861726c6573207468652043686164"
+    },
+    {
+      "liquidity": 1384957.429732,
+      "price": 96521.36280171172,
+      "ticker": "iBTC",
+      "unit": "f66d78b4a3cb3d37afa0ec36461e51ecbde00f26c8f0a68f94b6988069425443"
+    },
+    {
+      "liquidity": 1292336.395074,
+      "price": 0.10527111542311955,
+      "ticker": "VYFI",
+      "unit": "804f5544c1962a40546827cab750a88404dc7108c0f588b72964754f56594649"
+    },
+    {
+      "liquidity": 1269675.663412,
+      "price": 0.9264903825073848,
+      "ticker": "DJED",
+      "unit": "8db269c3ec630e06ae29f74bc39edd1f87c819f1056206e879a1cd61446a65644d6963726f555344"
+    },
+    {
+      "liquidity": 1196381.9087550256,
+      "price": 0.17246018288034337,
+      "ticker": "STRIKE",
+      "unit": "f13ac4d66b3ee19a6aa0f2a22298737bd907cc95121662fc971b5275535452494b45"
+    },
+    {
+      "liquidity": 1141072.893358,
+      "price": 0.03589510733054719,
+      "ticker": "WRT",
+      "unit": "c0ee29a85b13209423b10447d3c2e6a50641a15c57770e27cb9d507357696e67526964657273"
+    },
+    {
+      "liquidity": 1098333.703228,
+      "price": 0.36205487992328367,
+      "ticker": "O",
+      "unit": "2852268cf6e2db42e20f2fd3125f541e5d6c5a3d70b4dda17c2daa82"
+    },
+    {
+      "liquidity": 1056288.784906,
+      "price": 0.009942432641213951,
+      "ticker": "FACT",
+      "unit": "a3931691f5c4e65d01c429e473d0dd24c51afdb6daf88e632a6c1e516f7263666178746f6b656e"
+    },
+    {
+      "liquidity": 1016048.5368600001,
+      "price": 0.020187810672064984,
+      "ticker": "RJV",
+      "unit": "8cfd6893f5f6c1cc954cec1a0a1460841b74da6e7803820dde62bb78524a56"
+    },
+    {
+      "liquidity": 1008503.290238,
+      "price": 0.6981520893274015,
+      "ticker": "MILK",
+      "unit": "afbe91c0b44b3040e360057bf8354ead8c49c4979ae6ab7c4fbdc9eb4d494c4b7632"
+    },
+    {
+      "liquidity": 1003946.2907380001,
+      "price": 0.003359672718261369,
+      "ticker": "CBLP",
+      "unit": "ee0633e757fdd1423220f43688c74678abde1cead7ce265ba8a24fcd43424c50"
+    },
+    {
+      "liquidity": 971311.9307840001,
+      "price": 0.004967373851686822,
+      "ticker": "CLARITY",
+      "unit": "1e76aaec4869308ef5b61e81ebf229f2e70f75a50223defa087f807b436c61726974792044414f20546f6b656e"
+    },
+    {
+      "liquidity": 900972.2880328373,
+      "price": 7.751387989682e-06,
+      "ticker": "FREN",
+      "unit": "fc11a9ef431f81b837736be5f53e4da29b9469c983d07f321262ce614652454e"
+    },
+    {
+      "liquidity": 813454.04149,
+      "price": 0.005457373249253237,
+      "ticker": "SUGR",
+      "unit": "766fce8055f39d40fcfc19721677b3deb2e7846950ae08dce757f1e753554741522042555348"
+    },
+    {
+      "liquidity": 798478.456246,
+      "price": 0.175247804975642,
+      "ticker": "TITAN",
+      "unit": "8483844875ce4d61c2aa459240f277d32081ee08fe0ad16899a0f5810014df10544954414e"
+    },
+    {
+      "liquidity": 731463.1679484425,
+      "price": 0.005846080137502322,
+      "ticker": "NIKEPIG",
+      "unit": "c881c20e49dbaca3ff6cef365969354150983230c39520b917f5cf7c4e696b65"
+    },
+    {
+      "liquidity": 731202.7834440926,
+      "price": 0.017710111443007718,
+      "ticker": "XER",
+      "unit": "6d06570ddd778ec7c0cca09d381eca194e90c8cffa7582879735dbde584552"
+    },
+    {
+      "liquidity": 695821.6254246756,
+      "price": 0.19531414772620884,
+      "ticker": "BODEGA",
+      "unit": "5deab590a137066fef0e56f06ef1b830f21bc5d544661ba570bdd2ae424f44454741"
+    },
+    {
+      "liquidity": 629955.150444,
+      "price": 0.001912083073985523,
+      "ticker": "NMKR",
+      "unit": "5dac8536653edc12f6f5e1045d8164b9f59998d3bdc300fc928434894e4d4b52"
+    },
+    {
+      "liquidity": 625656.8382020001,
+      "price": 9.9883934971182e-05,
+      "ticker": "BBSNEK",
+      "unit": "7507734918533b3b896241b4704f3d4ce805256b01da6fcede43043642616279534e454b"
+    },
+    {
+      "liquidity": 605553.143582,
+      "price": 0.10553928255016792,
+      "ticker": "C3",
+      "unit": "8e51398904a5d3fc129fbf4f1589701de23c7824d5c90fdb9490e15a434841524c4933"
+    },
+    {
+      "liquidity": 572157.606396,
+      "price": 0.028089441167289488,
+      "ticker": "NOVA",
+      "unit": "75fcc276057db5fc48eae0e11453c773c8a54604c3086bf9d95ac1b743485259"
+    },
+    {
+      "liquidity": 547236.399781999,
+      "price": 5.3078266230088e-05,
+      "ticker": "DANZO",
+      "unit": "bf3e19192da77dfadc7c9065944e50ca7e1a439d90833e3ae58b720a44414e5a4f"
+    },
+    {
+      "liquidity": 519646.35893014167,
+      "price": 2.7425942736e-07,
+      "ticker": "SPICY",
+      "unit": "8bccc55da00a21d93a332624e77964c0f49d6c64ea3ed44cfa718e795350494359"
+    },
+    {
+      "liquidity": 493642.9579026643,
+      "price": 0.06657351373700961,
+      "ticker": "DEDI",
+      "unit": "64f7b108bd43f4bde344b82587655eeb821256c0c8e79ad48db15d1844454449"
+    },
+    {
+      "liquidity": 490629.1842620007,
+      "price": 0.00010879549831635,
+      "ticker": "SPXT",
+      "unit": "f7516c9f7b347eb412a777f3c711099b199ccd2be23b568a4a3abf6d535058"
+    },
+    {
+      "liquidity": 453461.95290600136,
+      "price": 7.617363377433e-06,
+      "ticker": "COCK",
+      "unit": "1ad4f068a49bbf0d4f05335cadeca0519cef34cc1b2bc35b2e5739ae434f434b"
+    },
+    {
+      "liquidity": 439094.7176839871,
+      "price": 7.0029824648e-07,
+      "ticker": "BANK",
+      "unit": "2b28c81dbba6d67e4b5a997c6be1212cba9d60d33f82444ab8b1f21842414e4b"
+    },
+    {
+      "liquidity": 396447.496242,
+      "price": 3705.481101898991,
+      "ticker": "iETH",
+      "unit": "f66d78b4a3cb3d37afa0ec36461e51ecbde00f26c8f0a68f94b6988069455448"
+    },
+    {
+      "liquidity": 383712.1689816549,
+      "price": 0.004294301166946075,
+      "ticker": "SOC",
+      "unit": "25f0fc240e91bd95dcdaebd2ba7713fc5168ac77234a3d79449fc20c534f4349455459"
+    },
+    {
+      "liquidity": 367644.246384,
+      "price": 0.9131303429780105,
+      "ticker": "MyUSD",
+      "unit": "92776616f1f32c65a173392e4410a3d8c39dcf6ef768c73af164779c4d79555344"
+    },
+    {
+      "liquidity": 357562.2251960001,
+      "price": 0.001491788071518493,
+      "ticker": "NEWM",
+      "unit": "682fe60c9918842b3323c43b5144bc3d52a23bd2fb81345560d73f634e45574d"
+    },
+    {
+      "liquidity": 342176.88399799995,
+      "price": 0.004184710754139678,
+      "ticker": "GERO",
+      "unit": "10a49b996e2402269af553a8a96fb8eb90d79e9eca79e2b4223057b64745524f"
+    },
+    {
+      "liquidity": 338464.09942600003,
+      "price": 0.003673504923268352,
+      "ticker": "SHT",
+      "unit": "14fac3fc691fe8c9883bde39cb3ac80012a9151e872dc1357e0cc90d5348215420434f494e"
+    },
+    {
+      "liquidity": 338438.204154,
+      "price": 0.06884086296722698,
+      "ticker": "TOKE",
+      "unit": "375df3f2fb44d3c42b3381a09edd4ea2303a57ada32b5308c0774ee0544f4b45"
+    },
+    {
+      "liquidity": 316107.207582,
+      "price": 0.13192574477953106,
+      "ticker": "xVYFI",
+      "unit": "b316f8f668aca7359ecc6073475c0c8106239bf87e05a3a1bd5697647856594649"
+    },
+    {
+      "liquidity": 311825.70185767853,
+      "price": 0.000257409667313143,
+      "ticker": "FRUG",
+      "unit": "0945ca2d1f1ed67fe6ca0d0d6331b9062fc61afabc6a738d620cf03246525547"
+    },
+    {
+      "liquidity": 311200.2638260036,
+      "price": 1.612670157338e-06,
+      "ticker": "STABLE",
+      "unit": "2adf188218a66847024664f4f63939577627a56c090f679fe366c5ee535441424c45"
+    },
+    {
+      "liquidity": 305671.063326,
+      "price": 0.051369289373748434,
+      "ticker": "EMP",
+      "unit": "6c8642400e8437f737eb86df0fc8a8437c760f48592b1ba8f5767e81456d706f7761"
+    },
+    {
+      "liquidity": 298967.99693,
+      "price": 0.030774838741179335,
+      "ticker": "FNX",
+      "unit": "805dba5284db75636dabc96c02f62c9d382e246ee22aa937a7a12aec0014df10464e58"
+    },
+    {
+      "liquidity": 290224.956824,
+      "price": 0.035691810236249136,
+      "ticker": "CHARLES",
+      "unit": "c8c711a3df70956c397cb92e1705b675b18652723cfb7f72ccd59f2d434841524c4553"
+    },
+    {
+      "liquidity": 286364.9137380009,
+      "price": 4.6071122098208e-05,
+      "ticker": "DUMB",
+      "unit": "c50e06eb7d36ce67af2b15dd38228b59e39a5dae644166c84e3d2d1344554d42"
+    },
+    {
+      "liquidity": 284683.947726,
+      "price": 0.006019960541996175,
+      "ticker": "DING",
+      "unit": "ce5b9e0f8a88255b65f2e4d065c6e716e9fa9a8a86dfb86423dd1ac044494e47"
+    },
+    {
+      "liquidity": 279653.116686,
+      "price": 0.01787049678085262,
+      "ticker": "LIFI",
+      "unit": "7914fae20eb2903ed6fd5021a415c1bd2626b64a2d86a304cb40ff5e4c494649"
+    },
+    {
+      "liquidity": 270370.110248,
+      "price": 0.004035591015220069,
+      "ticker": "PAVIA",
+      "unit": "884892bcdc360bcef87d6b3f806e7f9cd5ac30d999d49970e7a903ae5041564941"
+    },
+    {
+      "liquidity": 269150.27913199994,
+      "price": 0.001387922175718469,
+      "ticker": "MOGI",
+      "unit": "6a0f6c32b77596240ff8bc78e1c334fa9bd2131750f47f3afb36b1b24d4f4749"
+    },
+    {
+      "liquidity": 246725.3158159767,
+      "price": 4.669064086439e-06,
+      "ticker": "DGAF",
+      "unit": "64c3ebd40ed377989aa3069a2936e07c6ce82df46688c473d921520664676166"
+    },
+    {
+      "liquidity": 234479.34037985653,
+      "price": 2.93425714576e-07,
+      "ticker": "BOT",
+      "unit": "da247e71f71b0195c8188bf43827f34c9357cc388fceed596d100d95424f54"
+    },
+    {
+      "liquidity": 233094.870782,
+      "price": 0.05802503299536213,
+      "ticker": "REIT",
+      "unit": "52d4b39c2407ce020ab4abb785d820a3ad5a2fa07600d07a205e509f52454954"
+    },
+    {
+      "liquidity": 230337.88612799998,
+      "price": 0.016875755025510055,
+      "ticker": "OPT",
+      "unit": "1ddcb9c9de95361565392c5bdff64767492d61a96166cb16094e54be4f5054"
+    },
+    {
+      "liquidity": 229956.44888199997,
+      "price": 92930.09705267135,
+      "ticker": "rsBTC",
+      "unit": "2dbc49f682ad21f6d18705cf446f9f7a277731ab70ae21a454f888b27273425443"
+    },
+    {
+      "liquidity": 227001.7540400446,
+      "price": 6.89651042355e-07,
+      "ticker": "TRTL",
+      "unit": "52162581184a457fad70470161179c5766f00237d4b67e0f1df1b4e65452544c"
+    },
+    {
+      "liquidity": 225570.09976,
+      "price": 0.08488551378779628,
+      "ticker": "FRN",
+      "unit": "e69eaae4740f240ba9dfffd0ed6b7cb34070efe567e2ec841e3b756246524e"
+    },
+    {
+      "liquidity": 224496.91596602777,
+      "price": 1.645417331518e-06,
+      "ticker": "MFER",
+      "unit": "95f15aa946da0c39737b975657b209988478cd3057c2bcd273e41f9b4d464552"
+    },
+    {
+      "liquidity": 222269.714068,
+      "price": 0.09429342567356462,
+      "ticker": "CARDS",
+      "unit": "1fc21c9c7df3deca16d699b2d54cf5aa477576adc45f7c1340138a194341524453"
+    },
+    {
+      "liquidity": 215835.98602,
+      "price": 0.033755237761152856,
+      "ticker": "$DERP",
+      "unit": "961f2cac0bb1967d74691af179350c1e1062c7298d1f7be1e4696e312444455250"
+    },
+    {
+      "liquidity": 208676.283124,
+      "price": 0.001027383594174007,
+      "ticker": "BOO",
+      "unit": "d4b29d5d48edf300128a5f08150ad196a6af15ebd7932306d3099efe424f4f"
+    },
+    {
+      "liquidity": 207711.40783599112,
+      "price": 4.535244250886e-06,
+      "ticker": "RISK",
+      "unit": "2274b1699f5398170e0497598de7877ebb370ba7b5d25a1d0b2fea075249534b"
+    },
+    {
+      "liquidity": 206345.91596998958,
+      "price": 1.816815417806e-06,
+      "ticker": "RON",
+      "unit": "b201928d6bdb21c2e39205a92e226653d6002b949eaaacde3d986c2f524f4e"
+    },
+    {
+      "liquidity": 204197.60445520893,
+      "price": 0.000726550716320787,
+      "ticker": "GLITCH",
+      "unit": "6408659989dd69926352bf01fb507edc7fae658277ae4bab1b7c25ba474c49544348"
+    },
+    {
+      "liquidity": 203334.48744599998,
+      "price": 3.470004267128768,
+      "ticker": "ANGELS",
+      "unit": "285b65ae63d4fad36321384ec61edfd5187b8194fff89b5abe9876da414e47454c53"
+    },
+    {
+      "liquidity": 200766.097588,
+      "price": 101920.85097772206,
+      "ticker": "cBTC",
+      "unit": "4190b2941d9be04acc69c39739bd5acc66d60ccab480d8e20bc87e3763425443"
+    },
+    {
+      "liquidity": 196845.64279755665,
+      "price": 0.001920213651111921,
+      "ticker": "COCK",
+      "unit": "49e423161ef818adc475c783571cb479d5f15ad52a01a240eacc0d3b434f434b"
+    },
+    {
+      "liquidity": 192604.885198,
+      "price": 0.004108630592927335,
+      "ticker": "CLAY",
+      "unit": "38ad9dc3aec6a2f38e220142b9aa6ade63ebe71f65e7cc2b7d8a8535434c4159"
+    },
+    {
+      "liquidity": 190404.14447199999,
+      "price": 0.00402049342604784,
+      "ticker": "MIRA",
+      "unit": "160a880d9fc45380737cb7e57ff859763230aab28b3ef6a84007bfcc4d495241"
+    },
+    {
+      "liquidity": 173665.1624956509,
+      "price": 1.120909813564e-06,
+      "ticker": "SHARL",
+      "unit": "590f6d119b214cdcf7ef7751f8b7f1de615ff8f6de097a5ce62b257b534841524c"
+    },
+    {
+      "liquidity": 173028.197118,
+      "price": 0.7018203677994014,
+      "ticker": "MILK",
+      "unit": "8a1cfae21368b8bebbbed9800fec304e95cce39a2a57dc35e2e3ebaa4d494c4b"
+    },
+    {
+      "liquidity": 169058.92790999997,
+      "price": 0.001046332640316659,
+      "ticker": "KLENEK",
+      "unit": "d0d1c6f302672d07dc70f58cc818007f432672e6cd8f04de8f7a193f4b4c454e454b"
+    },
+    {
+      "liquidity": 168465.771214,
+      "price": 0.001854270342143535,
+      "ticker": "WORK",
+      "unit": "bbd0ec94cf9ccc1407b3dbc66bfbbff82ea49718ae4e3dceb817125f24574f524b"
+    },
+    {
+      "liquidity": 161596.778796,
+      "price": 0.001897606391857566,
+      "ticker": "FREYA",
+      "unit": "b2047ac03c18aa07c2ec50f0b9d1cf34db6021f92aa89f2e956602bd4652455941"
+    },
+    {
+      "liquidity": 160596.30017999996,
+      "price": 0.000668794911247996,
+      "ticker": "CHIPS",
+      "unit": "5df9a1b9af5172602cbf8e4ba9c2a608c3820fc6e5d8c5e48f2d907c5468652047697261666665"
+    },
+    {
+      "liquidity": 156956.395324,
+      "price": 0.01638386368751732,
+      "ticker": "JPG",
+      "unit": "681b5d0383ac3b457e1bcc453223c90ccef26b234328f45fa10fd2764a5047"
+    },
+    {
+      "liquidity": 155354.79759399896,
+      "price": 1.1722951418905e-05,
+      "ticker": "VIPER",
+      "unit": "caff93803e51c7b97bf79146790bfa3feb0d0b856ef16113b391b9975649504552"
+    },
+    {
+      "liquidity": 155146.54361,
+      "price": 0.008155292338525707,
+      "ticker": "BLUES",
+      "unit": "e043fd7b2076ea9e1b279d200b59e153bf6b299a72ce6e2c14aeb790424c554553"
+    },
+    {
+      "liquidity": 153898.4303581345,
+      "price": 0.02880795328775927,
+      "ticker": "GENS",
+      "unit": "dda5fdb1002f7389b33e036b6afee82a8189becb6cba852e8b79b4fb0014df1047454e53"
+    },
+    {
+      "liquidity": 153353.01131,
+      "price": 0.1869205835439983,
+      "ticker": "WHALE",
+      "unit": "e71a541df41dd14269bc63d40fb02bc91a3c3d344605948d173d88145748414c45"
+    }
+  ]
+}
