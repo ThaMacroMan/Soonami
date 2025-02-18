@@ -24,7 +24,7 @@ export default function Home() {
       {/* Title */}
       <div className="absolute w-full text-center pt-16">
         <h1 className="text-6xl font-extrabold text-white tracking-wider drop-shadow-lg">
-          CARDANO WHALE WATCHER
+          SOONAMI
         </h1>
       </div>
 
@@ -46,22 +46,22 @@ export default function Home() {
                   Solar System
                 </div>
               </Link>
-              <Link href="#">
+              <Link href="/TokenTracking">
                 <div className="px-4 py-3 text-white hover:bg-gray-900 cursor-pointer transition-colors">
                   Token Tracking
                 </div>
               </Link>
-              <Link href="#">
+              <Link href="/WalletTracking">
                 <div className="px-4 py-3 text-white hover:bg-gray-900 cursor-pointer transition-colors">
                   Wallet Tracking
                 </div>
               </Link>
-              <Link href="#">
+              <Link href="/TokenRacing">
                 <div className="px-4 py-3 text-white hover:bg-gray-900 cursor-pointer transition-colors">
                   Token Racing
                 </div>
               </Link>
-              <Link href="#">
+              <Link href="/CardanoViewer">
                 <div className="px-4 py-3 text-white hover:bg-gray-900 cursor-pointer transition-colors">
                   Cardano Viewer - Logo Organized
                 </div>
