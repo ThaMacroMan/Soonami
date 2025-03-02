@@ -8,8 +8,20 @@ export interface TapToolsVolumeToken {
   [key: string]: any;
 }
 
+interface PortfolioPosition {
+  tokenName?: string;
+  policyId?: string;
+  amount?: number;
+  liquidValue?: number;
+}
+
+interface PortfolioResponse {
+  positionsFt: PortfolioPosition[];
+}
+
 export class TapToolsService {
-  private apiKey: string;
+  private readonly apiKey: string;
+  private readonly baseUrl = 'https://api.taptools.io/api/v1';
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -152,12 +164,14 @@ export class TapToolsService {
     }
   }
 
-  async getTokenTrades(unit: string, timeframe = '7d', minAmount = 1000, perPage = 50): Promise<any[]> {
+  async getTokenTrades(unit: string, timeframe = '30d', minAmount = 1000, perPage = 100): Promise<{trades: any[], addresses: string[]}> {
     try {
+      console.log('Getting trades for unit:', unit);
+      
       const url = 'https://openapi.taptools.io/api/v1/token/trades';
       const resp = await axios.get(url, {
         headers: {
-          accept: 'application/json',
+          'accept': 'application/json',
           'X-API-Key': this.apiKey
         },
         params: {
@@ -166,24 +180,82 @@ export class TapToolsService {
           minAmount,
           sortBy: 'amount',
           order: 'desc',
-          perPage
+          perPage: Math.min(perPage, 50)
         }
       });
+
       if (resp.status === 200) {
-        return resp.data;
-      } else {
-        console.error(`Error ${resp.status} fetching trades for ${unit}:`, resp.data);
-        return [];
+        console.log('Trade response:', resp.data);
+        const trades = Array.isArray(resp.data) ? resp.data : [];
+        
+        // Get unique addresses and their total trade amounts
+        const addressMap = new Map<string, number>();
+        
+        trades.forEach(trade => {
+          if (trade.address) {
+            const currentAmount = addressMap.get(trade.address) || 0;
+            addressMap.set(trade.address, currentAmount + (trade.amount || trade.tokenAmount || 0));
+          }
+        });
+
+        // Convert to array and sort by total amount
+        const sortedAddresses = Array.from(addressMap.entries())
+          .sort((a, b) => b[1] - a[1])
+          .map(([address]) => address);
+
+        console.log('Sorted addresses:', sortedAddresses);
+        return { trades, addresses: sortedAddresses };
       }
-    } catch (err) {
+
+      if (resp.status === 429) {
+        console.log('Rate limited, waiting before retry...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return this.getTokenTrades(unit, timeframe, minAmount, perPage);
+      }
+
+      return { trades: [], addresses: [] };
+    } catch (err: any) {
+      if (err.response?.status === 429) {
+        console.log('Rate limited, waiting before retry...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return this.getTokenTrades(unit, timeframe, minAmount, perPage);
+      }
       console.error('getTokenTrades error:', err);
+      return { trades: [], addresses: [] };
+    }
+  }
+
+  async getAddressHistory(address: string, unit: string): Promise<any[]> {
+    try {
+      const response = await axios.get('/api/address-trades', {
+        params: {
+          address,
+          unit
+        }
+      });
+
+      if (response.status === 200) {
+        const trades = Array.isArray(response.data) ? response.data : [];
+        return trades.map(trade => ({
+          time: trade.time * 1000,
+          action: trade.action || 'Unknown',
+          tokenName: trade.tokenName || trade.tokenAName || 'Unknown',
+          amount: trade.amount || trade.tokenAAmount || 0,
+          hash: trade.hash,
+          exchange: trade.exchange || 'Unknown',
+          address: trade.counterparty || trade.address || 'Unknown'
+        }));
+      }
+      return [];
+    } catch (err) {
+      console.error('getAddressHistory error:', err);
       return [];
     }
   }
 
   async getTopTokenHolders(unit: string, page = 1, perPage = 20): Promise<any[]> {
     try {
-      const url = 'https://openapi.taptools.io/api/v1/token/holders/top';
+      const url = 'https://openapi.taptools.io/api/v1/token/holders';
       const resp = await axios.get(url, {
         headers: {
           accept: 'application/json',
@@ -192,7 +264,9 @@ export class TapToolsService {
         params: {
           unit,
           page,
-          perPage
+          perPage,
+          sortBy: 'amount',
+          order: 'desc'
         }
       });
       if (resp.status === 200) {
@@ -201,9 +275,90 @@ export class TapToolsService {
         console.error(`Error ${resp.status} fetching top holders for ${unit}:`, resp.data);
         return [];
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('getTopTokenHolders error:', err);
+      if (axios.isAxiosError(err) && err.response?.status === 429) {
+        console.log('Rate limited, waiting before retry...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return this.getTopTokenHolders(unit, page, perPage);
+      }
       return [];
+    }
+  }
+
+  async getTokenHolders(unit: string, options: {
+    perPage?: number;
+    sortBy?: string;
+    order?: 'asc' | 'desc';
+  } = {}): Promise<any[]> {
+    try {
+      console.log('Getting holders for unit:', unit, 'with options:', options);
+      
+      const response = await axios.get('/api/token-holders', {
+        params: {
+          unit,
+          limit: options.perPage || 50
+        }
+      });
+
+      if (response.status === 200 && Array.isArray(response.data)) {
+        console.log('Holders response:', response.data);
+        return response.data;
+      }
+
+      console.error('Unexpected response format:', response.data);
+      return [];
+    } catch (err: any) {
+      console.error('getTokenHolders error:', err);
+      return [];
+    }
+  }
+
+  async getWalletTokens(address: string) {
+    try {
+      const response = await axios.get(`${this.baseUrl}/wallet/tokens`, {
+        params: { address },
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`
+        }
+      });
+
+      if (response.status === 200) {
+        return response.data.tokens.map((token: any) => ({
+          name: token.name || token.policyId || 'Unknown',
+          amount: token.amount || 0,
+          value: token.value || 0,
+          policyId: token.policyId || ''
+        }));
+      }
+      return [];
+    } catch (err) {
+      console.error('getWalletTokens error:', err);
+      return [];
+    }
+  }
+
+  async getWalletTrades(address: string, options: { unit?: string; page?: string; perPage?: string } = {}): Promise<any> {
+    const { unit, page = '1', perPage = '100' } = options;
+
+    try {
+      const response = await axios.get('https://openapi.taptools.io/api/v1/wallet/trades/tokens', {
+        headers: {
+          'accept': 'application/json',
+          'X-API-Key': this.apiKey
+        },
+        params: {
+          address,
+          unit,
+          page,
+          perPage
+        }
+      });
+
+      return response.data; // Return the data from the response
+    } catch (error) {
+      console.error('Error fetching wallet trades:', error);
+      throw error; // Rethrow the error for handling in the calling function
     }
   }
 } 

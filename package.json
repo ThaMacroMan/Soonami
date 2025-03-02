@@ -11,6 +11,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@emurgo/cardano-serialization-lib-browser": "^14.1.1",
     "@heroui/autocomplete": "^2.3.11",
     "@heroui/button": "^2.2.10",
     "@heroui/dropdown": "^2.3.10",
