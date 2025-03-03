@@ -1,27 +1,114 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { Container, Typography, Button, List, ListItem, ListItemButton, ListItemText, Dialog, DialogTitle, DialogContent, Box, CircularProgress, Fade } from '@mui/material'
 import WalletConnectors from '../components/WalletConnectors'
 import { Wallet } from '../types/cardano'
 import Link from 'next/link'
-import tokenList from '../../algos/data/token_list.json'
-import { WhaleWatcher } from '../../algos'
+import tokenListJson from '../../algos/data/token_list.json'
+import { TapToolsService } from './taptools'
 import { Terminal, AnimatedSpan } from '../../components/magicui/terminal'
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer';
+import type { PerspectiveCamera } from 'three';
+import { Timeline } from './Timeline'
 
-function LiveTradeStream({ solarTokens, onNewTrade }: { solarTokens: any[], onNewTrade?: (trade: any) => void }) {
-  const [trades, setTrades] = useState<any[]>([]);
+// Define the token list structure
+interface TokenData {
+  ticker: string;
+  unit: string;
+  category: string;
+  imageUrl?: string;
+  liquidity: number;
+  price: number;
+}
+
+interface TokenListData {
+  tokens: TokenData[];
+  timestamp: string;
+}
+
+// Type the imported JSON
+const tokenList = tokenListJson as TokenListData;
+
+// Add interfaces for the trade and holder types
+interface Trade {
+  hash: string;
+  time: number;
+  tokenAAmount: number;
+  tokenAName: string;
+  tokenBAmount: number;
+  price: number;
+  action: 'buy' | 'sell' | 'add_liquidity' | 'remove_liquidity' | 'zap';
+  exchange: string;
+  token: any;
+  isNew?: boolean;
+}
+
+interface Holder {
+  address: string;
+  amount: number;
+  percentage: number;
+  value: number;
+}
+
+interface LiveTradeStreamProps {
+  solarTokens: any[];
+  onNewTrade?: (trade: Trade) => void;
+  refreshInterval?: number;
+  autoReconnect?: boolean;
+  speedMultiplier?: number;
+  enabled?: boolean;
+  isPlaying?: boolean;
+  startTime?: number;
+  currentTime?: number;
+  onTimeUpdate?: (time: number) => void;
+  setApiLoading?: (loading: boolean) => void;
+  isLiveMode?: boolean;
+}
+
+interface LiveTradeStreamRef {
+  resetToTime: (time: number) => void;
+  updateTokens: (newTokens: any[]) => void;
+  enableLiveMode: (enable: boolean) => void;
+}
+
+const LiveTradeStream = forwardRef<LiveTradeStreamRef, LiveTradeStreamProps>(({ 
+  solarTokens, 
+  onNewTrade,
+  refreshInterval = 2000,
+  autoReconnect = true,
+  speedMultiplier = 1,
+  enabled = true,
+  isPlaying = true,
+  startTime = Math.floor(Date.now() / 1000) - (30 * 24 * 3600),
+  currentTime = Math.floor(Date.now() / 1000),
+  onTimeUpdate,
+  setApiLoading,
+  isLiveMode = false
+}, ref) => {
+  const [trades, setTrades] = useState<Trade[]>([]);
   const [isHidden, setIsHidden] = useState(false);
-  const whaleWatcher = new WhaleWatcher(process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || '');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const tapTools = new TapToolsService(process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || '');
   const tradesRef = useRef<HTMLDivElement>(null);
-  const lastTradeTimeRef = useRef<number>(Date.now() / 1000 - 3600); // Start from 1 hour ago
+  const lastTradeTimeRef = useRef<number>(startTime);
   const autoScrollRef = useRef<boolean>(true);
   const scrollPositionRef = useRef<number>(0);
-  const tradeQueueRef = useRef<any[]>([]);
+  const tradeQueueRef = useRef<Trade[]>([]);
   const processingTradesRef = useRef<boolean>(false);
+  const hasInitializedRef = useRef<boolean>(false);
+  const fetchIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const initialFetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const speedMultiplierRef = useRef<number>(speedMultiplier);
+  const currentPageRef = useRef<number>(1);
+  const perPageRef = useRef<number>(100);
+  const apiSuccessCountRef = useRef<number>(0);
+  const apiFailureCountRef = useRef<number>(0);
+  const processedTradeHashesRef = useRef<Set<string>>(new Set());
+  const isLiveModeRef = useRef<boolean>(isLiveMode);
+  const liveModeIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const formatNumber = (num: number) => {
     return num.toLocaleString(undefined, { maximumFractionDigits: 2 });
@@ -32,13 +119,13 @@ function LiveTradeStream({ solarTokens, onNewTrade }: { solarTokens: any[], onNe
     if (processingTradesRef.current || tradeQueueRef.current.length === 0) return;
     
     processingTradesRef.current = true;
-    const trade = tradeQueueRef.current.shift();
+    const trade = tradeQueueRef.current.shift() as Trade;
     
     if (trade) {
-      console.log("Processing trade:", trade); // Debug log
+      console.log("Processing trade:", trade);
 
       // Pass through the trade with its original action from the API
-      const tradeWithToken = {
+      const tradeWithToken: Trade = {
         ...trade,
         token: trade.token
       };
@@ -79,59 +166,151 @@ function LiveTradeStream({ solarTokens, onNewTrade }: { solarTokens: any[], onNe
     }
   };
 
-  useEffect(() => {
-    const fetchTrades = async () => {
-      try {
-        // Create a Set of token units for faster lookup
-        const visibleTokenUnits = new Set(solarTokens.map(token => token.unit));
-        
-        // Fetch trades for all visible tokens in parallel
-        const newTradesPromises = solarTokens.map(async token => {
-          try {
-            const trades = await whaleWatcher.getTrades(token.unit);
-            return trades
-              .filter(trade => trade.time > lastTradeTimeRef.current)
-              .map(trade => ({ ...trade, token }));
-          } catch (error) {
-            console.error(`Error fetching trades for ${token.ticker}:`, error);
-            return [];
-          }
-        });
+  // Update fetchTrades to handle time ranges
+  const fetchTrades = async () => {
+    if (!enabled || !solarTokens.length) return;
+    
+    try {
+      setIsProcessing(true);
+      if (setApiLoading) setApiLoading(true);
 
-        const newTradesArrays = await Promise.all(newTradesPromises);
-        const allNewTrades = newTradesArrays
-          .flat()
-          .sort((a, b) => a.time - b.time); // Sort oldest first for processing order
+      const now = Math.floor(Date.now() / 1000);
+      let fetchStartTime = lastTradeTimeRef.current;
+      let fetchEndTime = currentTime;
 
-        if (allNewTrades.length > 0) {
-          lastTradeTimeRef.current = Math.max(...allNewTrades.map(t => t.time));
-          
-          // Add new trades to the queue in chronological order (oldest first)
-          tradeQueueRef.current.push(...allNewTrades);
-          
-          // Start processing if not already processing
-          if (!processingTradesRef.current) {
-            processNextTrade();
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching trades:', error);
+      if (isLiveModeRef.current) {
+        fetchStartTime = now - 300;
+        fetchEndTime = now;
       }
-    };
 
-    // Clear trades when solarTokens changes
+      const newTradesPromises = solarTokens.map(async token => {
+        try {
+          const trades = await tapTools.getTokenTradesInTimeRange(
+            token.unit,
+            fetchStartTime,
+            fetchEndTime,
+            perPageRef.current
+          );
+          return trades.map((trade: any) => ({ ...trade, token })) as Trade[];
+        } catch (error) {
+          console.error(`Error fetching trades for ${token.ticker}:`, error);
+          return [] as Trade[];
+        }
+      });
+
+      const newTradesArrays = await Promise.all(newTradesPromises);
+      const allNewTrades = newTradesArrays
+        .flat()
+        .sort((a, b) => a.time - b.time);
+
+      if (allNewTrades.length > 0) {
+        lastTradeTimeRef.current = Math.max(...allNewTrades.map(t => t.time));
+        tradeQueueRef.current.push(...allNewTrades);
+        
+        if (!processingTradesRef.current) {
+          processNextTrade();
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching trades:', error);
+      apiFailureCountRef.current++;
+    } finally {
+      setIsProcessing(false);
+      if (setApiLoading) setApiLoading(false);
+    }
+  };
+
+  // Reset to a specific time
+  const resetToTime = (time: number) => {
+    console.log(`Resetting to time: ${new Date(time * 1000).toLocaleString()}`);
     setTrades([]);
     tradeQueueRef.current = [];
-    lastTradeTimeRef.current = Date.now() / 1000 - 3600; // Reset to 1 hour ago
+    lastTradeTimeRef.current = time;
+    processedTradeHashesRef.current.clear();
     processingTradesRef.current = false;
-
-    // Initial fetch
+    currentPageRef.current = 1;
+    
+    // Fetch trades immediately
     fetchTrades();
+  };
 
-    // Set up interval for fetching trades every minute
-    const interval = setInterval(fetchTrades, 60000);
-    return () => clearInterval(interval);
-  }, [solarTokens, onNewTrade]);
+  // Update tokens
+  const updateTokens = (newTokens: any[]) => {
+    console.log(`Updating tokens: ${newTokens.length} tokens`);
+    setTrades([]);
+    tradeQueueRef.current = [];
+    processedTradeHashesRef.current.clear();
+    processingTradesRef.current = false;
+    currentPageRef.current = 1;
+    
+    // Don't reset the time - continue from where we left off
+    fetchTrades();
+  };
+
+  // Enable/disable live mode
+  const enableLiveMode = (enable: boolean) => {
+    console.log(`${enable ? 'Enabling' : 'Disabling'} live mode`);
+    isLiveModeRef.current = enable;
+    
+    // Clear existing intervals
+    if (fetchIntervalRef.current) {
+      clearInterval(fetchIntervalRef.current);
+      fetchIntervalRef.current = null;
+    }
+    if (liveModeIntervalRef.current) {
+      clearInterval(liveModeIntervalRef.current);
+      liveModeIntervalRef.current = null;
+    }
+    
+    if (enable) {
+      // Reset to current time minus 5 minutes
+      const now = Math.floor(Date.now() / 1000);
+      resetToTime(now - 300);
+      
+      // Set up live mode interval
+      liveModeIntervalRef.current = setInterval(fetchTrades, 60000);
+    } else {
+      // When disabling live mode, revert to normal interval
+      if (enabled && isPlaying) {
+        fetchIntervalRef.current = setInterval(fetchTrades, refreshInterval);
+      }
+    }
+  };
+
+  // Initialize component
+  useEffect(() => {
+    if (!enabled) return;
+    
+    console.log(`Initializing LiveTradeStream with ${solarTokens.length} tokens`);
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      resetToTime(startTime);
+    }
+    
+    // Set up fetch interval based on mode
+    if (isLiveModeRef.current) {
+      liveModeIntervalRef.current = setInterval(fetchTrades, 60000);
+    } else if (isPlaying) {
+      fetchIntervalRef.current = setInterval(fetchTrades, refreshInterval);
+    }
+    
+    return () => {
+      if (fetchIntervalRef.current) clearInterval(fetchIntervalRef.current);
+      if (liveModeIntervalRef.current) clearInterval(liveModeIntervalRef.current);
+    };
+  }, [enabled, solarTokens, isPlaying, isLiveMode]);
+
+  // Update speed multiplier ref when prop changes
+  useEffect(() => {
+    speedMultiplierRef.current = speedMultiplier;
+  }, [speedMultiplier]);
+
+  // Update live mode ref when prop changes
+  useEffect(() => {
+    if (isLiveModeRef.current !== isLiveMode) {
+      enableLiveMode(isLiveMode);
+    }
+  }, [isLiveMode]);
 
   // Auto-scroll effect
   useEffect(() => {
@@ -148,81 +327,107 @@ function LiveTradeStream({ solarTokens, onNewTrade }: { solarTokens: any[], onNe
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    resetToTime,
+    updateTokens,
+    enableLiveMode
+  }));
+
   return (
-    <Terminal 
-      className={`!max-h-none w-[300px] h-screen fixed transition-transform duration-300 ease-in-out ${isHidden ? 'translate-x-[calc(100%-48px)]' : 'translate-x-0'} right-0 top-0 bg-zinc-900/90 backdrop-blur-sm overflow-hidden border-l border-zinc-800`}
-      onToggle={() => setIsHidden(!isHidden)}
-    >
-      <div className="h-[100vh] flex flex-col">
-        <AnimatedSpan className="text-green-400 font-mono text-lg sticky top-0 bg-zinc-900/95 backdrop-blur-sm p-4 border-b border-zinc-800 z-10">
-          Live Token Trades
-        </AnimatedSpan>
-        <div 
-          ref={tradesRef} 
-          className="flex-1 overflow-y-auto p-4 space-y-2 h-full scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent"
-          onMouseEnter={() => autoScrollRef.current = false}
-          onMouseLeave={() => autoScrollRef.current = true}
-        >
-          {trades.map((trade, index) => (
-            trade.isNew ? (
-              <AnimatedSpan
-                key={`${trade.hash}-${trade.time}-${index}`}
-                delay={0}
-                className="font-mono block"
-              >
-                <div 
-                  className={`p-3 rounded bg-zinc-900/50 border border-zinc-800 
-                    ${trade.action === 'buy' ? 'text-green-400' : 'text-red-400'} text-sm new-trade-flash ${trade.action === 'buy' ? 'buy-flash' : 'sell-flash'} cursor-pointer hover:bg-zinc-800/50 transition-colors`}
-                  onClick={() => window.open(`https://cardanoscan.io/transaction/${trade.hash}`, '_blank')}
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold">{trade.token.ticker}</span>
-                    <span className="opacity-75">{new Date(trade.time * 1000).toLocaleTimeString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span>{formatNumber(Math.abs(trade.tokenAAmount))} tokens</span>
-                    <span>₳{formatNumber(Math.abs(trade.tokenAAmount * trade.price))}</span>
-                  </div>
-                  <div className="text-xs opacity-50 mt-1 hover:opacity-100 transition-opacity">
-                    {trade.hash.slice(0, 8)}...{trade.hash.slice(-8)} ↗
-                  </div>
-                </div>
-              </AnimatedSpan>
-            ) : (
-              <div
-                key={`${trade.hash}-${trade.time}-${index}`}
-                className="font-mono block"
-              >
-                <div 
-                  className={`p-3 rounded bg-zinc-900/50 border border-zinc-800 
-                    ${trade.action === 'buy' ? 'text-green-400' : 'text-red-400'} text-sm cursor-pointer hover:bg-zinc-800/50 transition-colors`}
-                  onClick={() => window.open(`https://cardanoscan.io/transaction/${trade.hash}`, '_blank')}
-                >
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold">{trade.token.ticker}</span>
-                    <span className="opacity-75">{new Date(trade.time * 1000).toLocaleTimeString()}</span>
-                  </div>
-                  <div className="flex justify-between items-center mt-1">
-                    <span>{formatNumber(Math.abs(trade.tokenAAmount))} tokens</span>
-                    <span>₳{formatNumber(Math.abs(trade.tokenAAmount * trade.price))}</span>
-                  </div>
-                  <div className="text-xs opacity-50 mt-1 hover:opacity-100 transition-opacity">
-                    {trade.hash.slice(0, 8)}...{trade.hash.slice(-8)} ↗
-                  </div>
-                </div>
-              </div>
-            )
-          ))}
+    <div className={`fixed top-0 right-0 w-[300px] h-screen bg-zinc-900/90 backdrop-blur-sm overflow-hidden border-l border-zinc-800 transition-all duration-300 ${isHidden ? 'translate-x-[calc(100%-40px)]' : 'translate-x-0'}`}>
+      <div className="flex items-center h-12 px-4 bg-zinc-900/95 backdrop-blur-sm border-b border-zinc-800 justify-between">
+        <div className="flex items-center">
+          <div className={`w-2 h-2 rounded-full mr-2 ${isProcessing ? 'bg-green-500 animate-pulse' : 'bg-zinc-500'}`}></div>
+          <span className="text-green-400 font-mono text-sm">
+            Token Trades
+          </span>
         </div>
+        <button 
+          className="text-zinc-500 hover:text-zinc-300 focus:outline-none"
+          onClick={() => setIsHidden(!isHidden)}
+          aria-label={isHidden ? "Show terminal" : "Hide terminal"}
+        >
+          {isHidden ? (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          ) : (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+          )}
+        </button>
+      </div>
+      
+      {/* Visible handle when terminal is hidden */}
+      {isHidden && (
+        <div 
+          className="absolute top-0 left-0 h-full w-[40px] bg-zinc-800/50 border-l border-zinc-700 cursor-pointer hover:bg-zinc-700/50 transition-colors flex items-center justify-center"
+          onClick={() => setIsHidden(false)}
+        >
+          <div className="flex flex-col items-center">
+            <svg className="w-5 h-5 text-green-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+            <span className="font-mono text-xs text-green-400 whitespace-nowrap transform rotate-90 origin-center mt-2">TRADES</span>
+          </div>
+        </div>
+      )}
+      
+      <div 
+        ref={tradesRef} 
+        className="h-[calc(100vh-48px)] overflow-y-auto p-2 bg-zinc-900/80 font-mono text-xs space-y-1.5 scrollbar-thin"
+      >
+        <div className="sticky top-0 bg-zinc-900 p-2 mb-1.5 rounded flex justify-between items-center z-10">
+          <div className="text-zinc-400">
+            {tradeQueueRef.current.length > 0 ? 
+              `Queue: ${tradeQueueRef.current.length} trades` :
+              'Waiting for trades...'}
+          </div>
+        </div>
+        
+        {trades.length === 0 && (
+          <div className="flex items-center justify-center h-[calc(100vh-150px)] text-zinc-500">
+            No trades yet. Waiting for data...
+          </div>
+        )}
+        
+        {trades.map((trade: Trade, index: number) => (
+          <div 
+            key={`${trade.hash}-${index}`} 
+            className={`p-2 rounded bg-zinc-900/50 border border-zinc-800 
+              ${trade.action === 'buy' ? 'text-green-400' : 
+                trade.action === 'sell' ? 'text-red-400' : 
+                trade.action === 'add_liquidity' ? 'text-purple-400' : 
+                trade.action === 'remove_liquidity' ? 'text-orange-400' : 
+                trade.action === 'zap' ? 'text-yellow-400' : 'text-zinc-400'} 
+              ${trade.isNew ? 'new-trade-flash ' + (
+                trade.action === 'buy' ? 'buy-flash' : 
+                trade.action === 'sell' ? 'sell-flash' : 
+                trade.action === 'add_liquidity' ? 'add-liquidity-flash' : 
+                trade.action === 'remove_liquidity' ? 'remove-liquidity-flash' : 
+                trade.action === 'zap' ? 'zap-flash' : ''
+              ) : ''}`}
+            onClick={() => window.open(`https://cardanoscan.io/transaction/${trade.hash}`, '_blank')}
+          >
+            <div className="flex justify-between items-center">
+              <span className="font-bold">{trade.token.ticker}</span>
+              <span className="opacity-75 text-[11px]">
+                {new Date(trade.time * 1000).toLocaleDateString(undefined, {month: 'numeric', day: 'numeric'})} {new Date(trade.time * 1000).toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit', second:'2-digit', hour12: true})}
+              </span>
+            </div>
+            <div className="flex justify-between items-center mt-0.5">
+              <span>{formatNumber(Math.abs(trade.tokenAAmount))} {trade.token.ticker}</span>
+              <span>₳{formatNumber(Math.abs(trade.tokenAAmount * trade.price))}</span>
+            </div>
+            <div className="text-[11px] opacity-50 mt-0.5 hover:opacity-100 transition-opacity">
+              {trade.hash.slice(0, 8)}...{trade.hash.slice(-8)} ↗
+            </div>
+          </div>
+        ))}
       </div>
       <style jsx global>{`
-        .terminal-container {
-          max-height: none !important;
-          height: 100vh !important;
-        }
-        .terminal-content {
-          height: calc(100vh - 4rem) !important;
-        }
         @keyframes buy-flash {
           0% { background-color: rgba(52, 211, 153, 0.3); }
           50% { background-color: rgba(52, 211, 153, 0.1); }
@@ -231,6 +436,21 @@ function LiveTradeStream({ solarTokens, onNewTrade }: { solarTokens: any[], onNe
         @keyframes sell-flash {
           0% { background-color: rgba(239, 68, 68, 0.3); }
           50% { background-color: rgba(239, 68, 68, 0.1); }
+          100% { background-color: rgba(0, 0, 0, 0); }
+        }
+        @keyframes add-liquidity-flash {
+          0% { background-color: rgba(153, 51, 255, 0.3); }
+          50% { background-color: rgba(153, 51, 255, 0.1); }
+          100% { background-color: rgba(0, 0, 0, 0); }
+        }
+        @keyframes remove-liquidity-flash {
+          0% { background-color: rgba(255, 153, 0, 0.3); }
+          50% { background-color: rgba(255, 153, 0, 0.1); }
+          100% { background-color: rgba(0, 0, 0, 0); }
+        }
+        @keyframes zap-flash {
+          0% { background-color: rgba(255, 204, 0, 0.3); }
+          50% { background-color: rgba(255, 204, 0, 0.1); }
           100% { background-color: rgba(0, 0, 0, 0); }
         }
         .new-trade-flash {
@@ -243,6 +463,15 @@ function LiveTradeStream({ solarTokens, onNewTrade }: { solarTokens: any[], onNe
         }
         .sell-flash {
           animation-name: sell-flash;
+        }
+        .add-liquidity-flash {
+          animation-name: add-liquidity-flash;
+        }
+        .remove-liquidity-flash {
+          animation-name: remove-liquidity-flash;
+        }
+        .zap-flash {
+          animation-name: zap-flash;
         }
         
         /* Custom Scrollbar Styles */
@@ -260,20 +489,22 @@ function LiveTradeStream({ solarTokens, onNewTrade }: { solarTokens: any[], onNe
           background-color: rgba(161, 161, 170, 0.5);
         }
       `}</style>
-    </Terminal>
+    </div>
   );
-}
+});
+
+LiveTradeStream.displayName = 'LiveTradeStream';
 
 function SolarSystemTokens({ tokens, onSelectToken }: { tokens: any[], onSelectToken: (token: any) => void }) {
   const [tokenCount, setTokenCount] = useState(20);
   const [showLabels, setShowLabels] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
-  const whaleWatcher = new WhaleWatcher(process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || '');
+  const tapTools = new TapToolsService(process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || '');
   const tradeVolumeRef = useRef<{ [key: string]: number }>({});
   const baseOrbitSpeedRef = useRef<{ [key: string]: number }>({});
   const planetsRef = useRef<any[]>([]);
   const sceneRef = useRef<THREE.Scene | null>(null);
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const cameraRef = useRef<PerspectiveCamera | null>(null);
   const explosionsRef = useRef<Array<{
     particles: THREE.Points,
     startTime: number,
@@ -283,11 +514,12 @@ function SolarSystemTokens({ tokens, onSelectToken }: { tokens: any[], onSelectT
     distanceScale: number
   }>>([]);
   const flashingPlanetsRef = useRef<Map<string, { color: THREE.Color, endTime: number }>>(new Map());
+  const labelRendererRef = useRef<{ domElement: HTMLElement; render: (scene: THREE.Scene, camera: PerspectiveCamera) => void; setSize: (width: number, height: number) => void } | null>(null);
 
   const createExplosion = (
     planet: any, 
     color: THREE.Color, 
-    camera: THREE.PerspectiveCamera,
+    camera: PerspectiveCamera,
     particleCount: number = 300, // Reduced base particle count
     sizeMultiplier: number = 1
   ) => {
@@ -455,6 +687,7 @@ function SolarSystemTokens({ tokens, onSelectToken }: { tokens: any[], onSelectT
 
     // Label renderer setup
     const labelRenderer = new CSS2DRenderer();
+    labelRendererRef.current = labelRenderer;
     labelRenderer.setSize(window.innerWidth, window.innerHeight);
     labelRenderer.domElement.style.position = 'absolute';
     labelRenderer.domElement.style.top = '0';
@@ -596,6 +829,7 @@ function SolarSystemTokens({ tokens, onSelectToken }: { tokens: any[], onSelectT
       labelDiv.style.transition = 'opacity 0.3s';
       labelDiv.style.textShadow = '0 0 4px rgba(0,0,0,0.8)';
       labelDiv.style.transform = 'translate(-50%, -50%)';
+      labelDiv.style.opacity = showLabels ? '1' : '0';
       labelDiv.textContent = token.ticker;
       
       // Create CSS2D object for label
@@ -700,12 +934,18 @@ function SolarSystemTokens({ tokens, onSelectToken }: { tokens: any[], onSelectT
 
       // Update sun label to face camera
       if (sunMesh && sunMesh.children[0]) {
-        sunMesh.children[0].quaternion.copy(camera.quaternion);
+        const labelObject = sunMesh.children[0] as unknown as { element: HTMLElement };
+        if (labelObject.element) {
+          labelObject.element.style.opacity = showLabels ? '1' : '0';
+          sunMesh.children[0].quaternion.copy(camera.quaternion);
+        }
       }
 
       // Render scene and labels
       renderer.render(scene, camera);
-      labelRenderer.render(scene, camera);
+      if (labelRendererRef.current) {
+        labelRendererRef.current.render(scene, camera);
+      }
     }
     animate();
 
@@ -731,7 +971,9 @@ function SolarSystemTokens({ tokens, onSelectToken }: { tokens: any[], onSelectT
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      labelRenderer.setSize(window.innerWidth, window.innerHeight);
+      if (labelRendererRef.current) {
+        labelRendererRef.current.setSize(window.innerWidth, window.innerHeight);
+      }
     }
     window.addEventListener('resize', onWindowResize);
 
@@ -740,9 +982,12 @@ function SolarSystemTokens({ tokens, onSelectToken }: { tokens: any[], onSelectT
       window.removeEventListener('resize', onWindowResize);
       if (containerRef.current) {
         containerRef.current.removeChild(renderer.domElement);
-        containerRef.current.removeChild(labelRenderer.domElement);
+        if (labelRendererRef.current) {
+          containerRef.current.removeChild(labelRendererRef.current.domElement);
+        }
       }
       sceneRef.current = null;
+      labelRendererRef.current = null;
     };
   }, [tokens, onSelectToken, tokenCount, showLabels]);
 
@@ -822,14 +1067,21 @@ export default function WhaleWatchingPage() {
   const [address, setAddress] = useState<string>('')
   const [showTokenList, setShowTokenList] = useState(false)
   const [selectedToken, setSelectedToken] = useState<any>(null)
-  const [whaleData, setWhaleData] = useState<any[]>([])
-  const [trades, setTrades] = useState<any[]>([])
+  const [whaleData, setWhaleData] = useState<Holder[]>([])
+  const [trades, setTrades] = useState<Trade[]>([])
   const [loading, setLoading] = useState(false)
   const tradesRef = useRef<HTMLDivElement>(null)
   const holdersRef = useRef<HTMLDivElement>(null)
+  
+  // Timeline related state
+  const [currentTime, setCurrentTime] = useState<number>(Math.floor(Date.now() / 1000))
+  const [startTime, setStartTime] = useState<number>(Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60)) // 30 days ago
+  const [isPlaying, setIsPlaying] = useState<boolean>(false)
+  const [speedMultiplier, setSpeedMultiplier] = useState<number>(1)
+  const [isLiveMode, setIsLiveMode] = useState<boolean>(true)
 
-  // Initialize WhaleWatcher with API key
-  const whaleWatcher = new WhaleWatcher(process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || '')
+  // Initialize TapToolsService with API key
+  const tapTools = new TapToolsService(process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || '')
 
   const fetchWhaleData = async (token: any) => {
     setLoading(true)
@@ -837,9 +1089,9 @@ export default function WhaleWatchingPage() {
     // Start both fetches in parallel but handle data streaming separately
     const fetchHolders = async () => {
       try {
-        const holders = await whaleWatcher.getTopHolders(token.unit)
+        const holders = await tapTools.getTopTokenHolders(token.unit)
         // Stream in holders one by one
-        holders.forEach((holder, index) => {
+        holders.forEach((holder: Holder, index: number) => {
           setTimeout(() => {
             setWhaleData(prev => [...prev, holder].slice(0, 50))
           }, index * 100) // Add each holder with 100ms delay
@@ -851,9 +1103,9 @@ export default function WhaleWatchingPage() {
 
     const fetchAndStreamTrades = async () => {
       try {
-        const initialTrades = await whaleWatcher.getTrades(token.unit)
+        const initialTrades = await tapTools.getTokenTrades(token.unit)
         // Stream in trades one by one
-        initialTrades.forEach((trade, index) => {
+        initialTrades.forEach((trade: Trade, index: number) => {
           setTimeout(() => {
             setTrades(prev => [trade, ...prev].slice(0, 50))
           }, index * 100) // Add each trade with 100ms delay
@@ -861,9 +1113,9 @@ export default function WhaleWatchingPage() {
 
         // Set up periodic trade updates
         const interval = setInterval(async () => {
-          const newTrades = await whaleWatcher.getTrades(token.unit)
+          const newTrades = await tapTools.getTokenTrades(token.unit)
           // Stream in new trades
-          newTrades.forEach((trade, index) => {
+          newTrades.forEach((trade: Trade, index: number) => {
             setTimeout(() => {
               setTrades(prev => [trade, ...prev].slice(0, 50))
             }, index * 100)
@@ -913,16 +1165,73 @@ export default function WhaleWatchingPage() {
     }
   }
 
+  // Timeline handlers
+  const handleTimeChange = (newTime: number) => {
+    console.log(`Timeline time changed to: ${new Date(newTime * 1000).toLocaleString()}`)
+    setCurrentTime(newTime)
+    
+    // If we're in live mode, exit it
+    if (isLiveMode) {
+      setIsLiveMode(false)
+    }
+  }
+
+  const handlePlayPause = (playing: boolean) => {
+    setIsPlaying(playing)
+  }
+
+  const handleLiveModeToggle = (live: boolean) => {
+    setIsLiveMode(live)
+    
+    // If entering live mode, pause the timeline
+    if (live) {
+      setIsPlaying(false)
+      // Set current time to now
+      setCurrentTime(Math.floor(Date.now() / 1000))
+    }
+  }
+
+  // Update time every second when playing (but not in live mode)
+  useEffect(() => {
+    if (!isPlaying || isLiveMode) return
+    
+    const interval = setInterval(() => {
+      setCurrentTime(time => {
+        const newTime = Math.min(time + speedMultiplier, Math.floor(Date.now() / 1000))
+        return newTime
+      })
+    }, 1000)
+    
+    return () => clearInterval(interval)
+  }, [isPlaying, speedMultiplier, isLiveMode])
+
+  // Initialize time values on client-side only
+  useEffect(() => {
+    const now = Math.floor(Date.now() / 1000)
+    const thirtyDaysAgo = now - (30 * 24 * 60 * 60)
+    
+    setCurrentTime(now)
+    setStartTime(thirtyDaysAgo)
+  }, [])
+
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined
 
     if (selectedToken) {
       fetchWhaleData(selectedToken).then(cleanupFn => {
-        cleanupFn() // Execute cleanup function but don't assign its result
+        // Store the interval returned by fetchWhaleData
+        if (typeof cleanupFn === 'function') {
+          // If it's a function, call it (old behavior)
+          cleanupFn();
+        } else if (cleanupFn) {
+          // If it's an interval, store it
+          interval = cleanupFn;
+        }
       })
     }
 
     return () => {
+      if (interval) clearInterval(interval)
       setWhaleData([])
       setTrades([])
     }
@@ -989,7 +1298,7 @@ export default function WhaleWatchingPage() {
                   {loading ? (
                     <CircularProgress />
                   ) : (
-                    trades.map((trade, index) => (
+                    trades.map((trade: Trade, index: number) => (
                       <AnimatedSpan 
                         key={`${trade.hash}-${trade.time}-${index}`}
                         delay={index * 300}
@@ -1031,6 +1340,21 @@ export default function WhaleWatchingPage() {
               </div>
             </Terminal>
           </Box>
+        )}
+
+        {/* Timeline component */}
+        {currentTime > 0 && startTime > 0 && (
+          <Timeline
+            startTime={startTime}
+            endTime={Math.floor(Date.now() / 1000)} // Always use current time as end time
+            currentTime={currentTime}
+            isPlaying={isPlaying}
+            onTimeChange={handleTimeChange}
+            onPlayPause={handlePlayPause}
+            speedMultiplier={speedMultiplier}
+            onLiveModeToggle={handleLiveModeToggle}
+            isLiveMode={isLiveMode}
+          />
         )}
 
         {/* Token List Dialog */}

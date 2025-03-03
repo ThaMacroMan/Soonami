@@ -21,13 +21,24 @@ export async function GET(request: Request) {
     console.log(`Fetching trades for address: ${address}, unit: ${unit}, page: ${page}, perPage: ${perPage}`);
 
     // Use the TapTools service to get wallet trades
-    const response = await tapTools.getWalletTrades(address, { unit, page, perPage });
+    const response = await tapTools.getWalletTrades(address, { 
+      unit: unit, // Make sure unit is explicitly passed
+      page, 
+      perPage 
+    });
     
-    // Log the entire response
-    console.log('Raw trades response:', response);
+    // Log the response type and length
+    console.log('Raw trades response type:', typeof response);
+    console.log('Raw trades response length:', Array.isArray(response) ? response.length : 'not an array');
+
+    // Handle empty response
+    if (!response || (Array.isArray(response) && response.length === 0)) {
+      console.log('No trades found for the address');
+      return NextResponse.json([]);
+    }
 
     // Transform the response into the desired format
-    const trades = response.map((trade: any) => ({
+    const trades = Array.isArray(response) ? response.map((trade: any) => ({
       action: trade.action,
       hash: trade.hash,
       time: new Date(trade.time * 1000).toLocaleString(),
@@ -38,7 +49,7 @@ export async function GET(request: Request) {
       tokenBAmount: trade.tokenBAmount,
       tokenBName: trade.tokenBName,
       exchange: trade.exchange
-    }));
+    })) : [];
 
     console.log(`Transformed ${trades.length} trades`);
     return NextResponse.json(trades);

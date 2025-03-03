@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
+const baseUrl = 'https://openapi.taptools.io/api/v1';
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const address = searchParams.get('address');
@@ -13,7 +15,7 @@ export async function GET(request: Request) {
   try {
     console.log('Fetching trades for:', { address, unit });
     
-    const response = await axios.get('https://openapi.taptools.io/api/v1/address/trades', {
+    const response = await axios.get(`${baseUrl}/address/trades`, {
       headers: {
         'accept': 'application/json',
         'X-API-Key': process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || ''

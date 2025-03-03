@@ -2,6 +2,7 @@ import { TapToolsService } from './taptools';
 import axios from 'axios';
 
 const API_KEY = process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || '';
+const baseUrl = 'https://openapi.taptools.io/api/v1';
 const tapTools = new TapToolsService(API_KEY);
 
 interface TradeHistory {
@@ -22,7 +23,7 @@ export async function getTokenTradeHistory(address?: string, unit?: string) {
     if (unit && address) {
       console.log('Checking trades for:', { unit, address });
       
-      const url = 'https://openapi.taptools.io/api/v1/token/trades';
+      const url = `${baseUrl}/token/trades`;
       const response = await axios.get(url, {
         headers: {
           'Content-Type': 'application/json',

@@ -37,13 +37,13 @@ export default function WalletConnectors(props: { onConnectWallet: (wallet: Wall
 
   return (
     <div>
-      <Button
+      {/* <Button
         onClick={handleClick}
         className="bg-gradient-to-tr from-blue-500 to-green-500 text-white shadow-lg"
         variant="contained"
       >
         Connect Wallet
-      </Button>
+      </Button> */}
       <Menu
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}

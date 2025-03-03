@@ -12,6 +12,7 @@
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
     "@emurgo/cardano-serialization-lib-browser": "^14.1.1",
+    "@heroicons/react": "^2.2.0",
     "@heroui/autocomplete": "^2.3.11",
     "@heroui/button": "^2.2.10",
     "@heroui/dropdown": "^2.3.10",
@@ -27,6 +28,7 @@
     "next": "15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "recharts": "^2.15.1",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.173.0"

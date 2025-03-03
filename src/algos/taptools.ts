@@ -21,7 +21,7 @@ interface PortfolioResponse {
 
 export class TapToolsService {
   private readonly apiKey: string;
-  private readonly baseUrl = 'https://api.taptools.io/api/v1';
+  private readonly baseUrl = 'https://openapi.taptools.io/api/v1';
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -29,7 +29,7 @@ export class TapToolsService {
 
   async getTopVolumeTokens(perPage = 10): Promise<TapToolsVolumeToken[]> {
     try {
-      const url = 'https://openapi.taptools.io/api/v1/token/top/volume';
+      const url = `${this.baseUrl}/token/top/volume`;
       const resp = await axios.get<TapToolsVolumeToken[]>(url, {
         headers: {
           accept: 'application/json',
@@ -47,14 +47,32 @@ export class TapToolsService {
 
   async getAddressInfo(address: string): Promise<Record<string, any> | null> {
     try {
-      const baseUrl = 'https://openapi.taptools.io/api/v1/address/info';
-      const resp = await axios.get(baseUrl, {
+      console.log(`Fetching address info for: ${address}`);
+      const url = `${this.baseUrl}/address/info`;
+      const resp = await axios.get(url, {
         headers: {
           accept: 'application/json',
           'X-API-Key': this.apiKey
         },
         params: { address }
       });
+      
+      // Log the response structure to help with debugging
+      console.log('Address info response structure:', Object.keys(resp.data || {}));
+      
+      // Check if the response contains the addresses field
+      if (resp.data && !resp.data.addresses && address.startsWith('stake')) {
+        console.log('Response does not contain addresses field for stake address, checking account field');
+        
+        // Some APIs might return the addresses under a different field
+        if (resp.data.account && resp.data.account.addresses) {
+          console.log('Found addresses in account field');
+          resp.data.addresses = resp.data.account.addresses;
+        } else {
+          console.log('No addresses found in the response for stake address');
+        }
+      }
+      
       return resp.data;
     } catch (err) {
       console.error(`Error fetching address info: ${err}`);
@@ -64,7 +82,7 @@ export class TapToolsService {
 
   async getTokenPrices(units: string[]): Promise<Record<string, number>> {
     try {
-      const url = 'https://openapi.taptools.io/api/v1/token/prices';
+      const url = `${this.baseUrl}/token/prices`;
       const resp = await axios.post(url, units, {
         headers: {
           'Content-Type': 'application/json',
@@ -81,8 +99,8 @@ export class TapToolsService {
 
   async getTokenPriceChg(unit: string, timeframes = '1h,4h,24h'): Promise<Record<string, number>> {
     try {
-      const baseUrl = 'https://openapi.taptools.io/api/v1/token/prices/chg';
-      const resp = await axios.get(baseUrl, {
+      const url = `${this.baseUrl}/token/prices/chg`;
+      const resp = await axios.get(url, {
         headers: {
           accept: 'application/json',
           'X-API-Key': this.apiKey
@@ -98,7 +116,7 @@ export class TapToolsService {
 
   async getTokenPools(unit: string, adaOnly = 1): Promise<any[]> {
     try {
-      const url = 'https://openapi.taptools.io/api/v1/token/pools';
+      const url = `${this.baseUrl}/token/pools`;
       const resp = await axios.get(url, {
         headers: {
           accept: 'application/json',
@@ -115,7 +133,7 @@ export class TapToolsService {
 
   async getTokenOhlcv(unit: string, interval = '1d', numIntervals = 30): Promise<any[]> {
     try {
-      const url = 'https://openapi.taptools.io/api/v1/token/ohlcv';
+      const url = `${this.baseUrl}/token/ohlcv`;
       const resp = await axios.get(url, {
         headers: {
           accept: 'application/json',
@@ -132,7 +150,7 @@ export class TapToolsService {
 
   async getTokenTradingStats(unit: string, timeframe = '24h'): Promise<Record<string, any>> {
     try {
-      const url = 'https://openapi.taptools.io/api/v1/token/trading/stats';
+      const url = `${this.baseUrl}/token/trading/stats`;
       const resp = await axios.get(url, {
         headers: {
           accept: 'application/json',
@@ -149,7 +167,7 @@ export class TapToolsService {
 
   async getTokenMcap(unit: string): Promise<Record<string, any>> {
     try {
-      const url = 'https://openapi.taptools.io/api/v1/token/mcap';
+      const url = `${this.baseUrl}/token/mcap`;
       const resp = await axios.get(url, {
         headers: {
           accept: 'application/json',
@@ -168,7 +186,7 @@ export class TapToolsService {
     try {
       console.log('Getting trades for unit:', unit);
       
-      const url = 'https://openapi.taptools.io/api/v1/token/trades';
+      const url = `${this.baseUrl}/token/trades`;
       const resp = await axios.get(url, {
         headers: {
           'accept': 'application/json',
@@ -227,7 +245,11 @@ export class TapToolsService {
 
   async getAddressHistory(address: string, unit: string): Promise<any[]> {
     try {
-      const response = await axios.get('/api/address-trades', {
+      const response = await axios.get(`${this.baseUrl}/address/trades`, {
+        headers: {
+          accept: 'application/json',
+          'X-API-Key': this.apiKey
+        },
         params: {
           address,
           unit
@@ -255,7 +277,7 @@ export class TapToolsService {
 
   async getTopTokenHolders(unit: string, page = 1, perPage = 20): Promise<any[]> {
     try {
-      const url = 'https://openapi.taptools.io/api/v1/token/holders';
+      const url = `${this.baseUrl}/token/holders`;
       const resp = await axios.get(url, {
         headers: {
           accept: 'application/json',
@@ -316,18 +338,79 @@ export class TapToolsService {
 
   async getWalletTokens(address: string) {
     try {
+      // Check if the address is a stake address
+      if (address.startsWith('stake')) {
+        console.log('Stake address detected, fetching associated payment addresses for tokens...');
+        
+        // Get address info to find associated payment addresses
+        const addressInfo = await this.getAddressInfo(address);
+        
+        if (!addressInfo || !addressInfo.addresses || !Array.isArray(addressInfo.addresses) || addressInfo.addresses.length === 0) {
+          console.log('No payment addresses found for stake address:', address);
+          return []; // Return empty array if no payment addresses found
+        }
+        
+        console.log(`Found ${addressInfo.addresses.length} payment addresses for stake address:`, address);
+        
+        // Fetch tokens for each payment address and combine results
+        let allTokens: any[] = [];
+        const processedPolicyIds = new Set(); // To avoid duplicate tokens
+        
+        for (const paymentAddress of addressInfo.addresses) {
+          try {
+            console.log(`Fetching tokens for payment address: ${paymentAddress}`);
+            const response = await axios.get(`${this.baseUrl}/wallet/tokens`, {
+              params: { address: paymentAddress },
+              headers: {
+                'accept': 'application/json',
+                'X-API-Key': this.apiKey
+              }
+            });
+            
+            if (response.status === 200) {
+              const tokens = response.data.tokens || response.data || [];
+              console.log(`Found ${tokens.length} tokens for payment address: ${paymentAddress}`);
+              
+              // Process tokens and avoid duplicates
+              for (const token of tokens) {
+                const policyId = token.policyId || '';
+                if (!processedPolicyIds.has(policyId)) {
+                  processedPolicyIds.add(policyId);
+                  allTokens.push({
+                    name: token.name || token.ticker || token.policyId || 'Unknown',
+                    amount: token.amount || token.balance || 0,
+                    value: token.value || token.adaValue || 0,
+                    policyId: policyId
+                  });
+                }
+              }
+            }
+          } catch (error) {
+            console.error(`Error fetching tokens for payment address ${paymentAddress}:`, error);
+            // Continue with other addresses even if one fails
+          }
+        }
+        
+        console.log(`Total unique tokens found across all payment addresses: ${allTokens.length}`);
+        return allTokens;
+      }
+      
+      // If not a stake address, proceed with the original implementation
       const response = await axios.get(`${this.baseUrl}/wallet/tokens`, {
         params: { address },
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`
+          'accept': 'application/json',
+          'X-API-Key': this.apiKey
         }
       });
 
       if (response.status === 200) {
-        return response.data.tokens.map((token: any) => ({
-          name: token.name || token.policyId || 'Unknown',
-          amount: token.amount || 0,
-          value: token.value || 0,
+        // Handle different response formats
+        const tokens = response.data.tokens || response.data || [];
+        return tokens.map((token: any) => ({
+          name: token.name || token.ticker || token.policyId || 'Unknown',
+          amount: token.amount || token.balance || 0,
+          value: token.value || token.adaValue || 0,
           policyId: token.policyId || ''
         }));
       }
@@ -339,10 +422,85 @@ export class TapToolsService {
   }
 
   async getWalletTrades(address: string, options: { unit?: string; page?: string; perPage?: string } = {}): Promise<any> {
-    const { unit, page = '1', perPage = '100' } = options;
+    const { unit = '', page = '1', perPage = '100' } = options;
 
     try {
-      const response = await axios.get('https://openapi.taptools.io/api/v1/wallet/trades/tokens', {
+      // Check if the address is a stake address
+      if (address.startsWith('stake')) {
+        console.log('Stake address detected, fetching associated payment addresses...');
+        
+        // Get address info to find associated payment addresses
+        const addressInfo = await this.getAddressInfo(address);
+        
+        if (!addressInfo || !addressInfo.addresses || !Array.isArray(addressInfo.addresses) || addressInfo.addresses.length === 0) {
+          console.log('No payment addresses found for stake address:', address);
+          
+          // Try direct API call even for stake addresses as a fallback
+          try {
+            console.log('Attempting direct API call for stake address');
+            const response = await axios.get(`${this.baseUrl}/wallet/trades/tokens`, {
+              headers: {
+                'accept': 'application/json',
+                'X-API-Key': this.apiKey
+              },
+              params: {
+                address,
+                unit,
+                page,
+                perPage
+              }
+            });
+            
+            if (response.data && Array.isArray(response.data)) {
+              console.log(`Found ${response.data.length} trades directly for stake address`);
+              return response.data;
+            }
+          } catch (directError) {
+            console.error('Direct API call for stake address failed:', directError);
+          }
+          
+          return []; // Return empty array if no payment addresses found and direct call failed
+        }
+        
+        console.log(`Found ${addressInfo.addresses.length} payment addresses for stake address:`, address);
+        console.log('Payment addresses:', addressInfo.addresses);
+        
+        // Fetch trades for each payment address and combine results
+        let allTrades: any[] = [];
+        
+        for (const paymentAddress of addressInfo.addresses) {
+          try {
+            console.log(`Fetching trades for payment address: ${paymentAddress}, unit: ${unit}`);
+            const response = await axios.get(`${this.baseUrl}/wallet/trades/tokens`, {
+              headers: {
+                'accept': 'application/json',
+                'X-API-Key': this.apiKey
+              },
+              params: {
+                address: paymentAddress,
+                unit,
+                page,
+                perPage
+              }
+            });
+            
+            if (response.data && Array.isArray(response.data)) {
+              console.log(`Found ${response.data.length} trades for payment address: ${paymentAddress}`);
+              allTrades = [...allTrades, ...response.data];
+            }
+          } catch (error) {
+            console.error(`Error fetching trades for payment address ${paymentAddress}:`, error);
+            // Continue with other addresses even if one fails
+          }
+        }
+        
+        console.log(`Total trades found across all payment addresses: ${allTrades.length}`);
+        return allTrades;
+      }
+      
+      // If not a stake address, proceed with the original implementation
+      console.log(`Fetching trades for payment address: ${address}, unit: ${unit}`);
+      const response = await axios.get(`${this.baseUrl}/wallet/trades/tokens`, {
         headers: {
           'accept': 'application/json',
           'X-API-Key': this.apiKey
@@ -360,5 +518,185 @@ export class TapToolsService {
       console.error('Error fetching wallet trades:', error);
       throw error; // Rethrow the error for handling in the calling function
     }
+  }
+
+  async getPortfolioPositions(address: string): Promise<any> {
+    try {
+      console.log(`[getPortfolioPositions] Fetching portfolio positions for address: ${address}`);
+      console.log(`[getPortfolioPositions] API URL: ${this.baseUrl}/wallet/portfolio/positions`);
+      console.log(`[getPortfolioPositions] API Key: ${this.apiKey ? this.apiKey.substring(0, 4) + '...' : 'missing'}`);
+      
+      const response = await axios.get(`${this.baseUrl}/wallet/portfolio/positions`, {
+        headers: {
+          accept: 'application/json',
+          'X-API-Key': this.apiKey
+        },
+        params: {
+          address
+        }
+      });
+
+      console.log(`[getPortfolioPositions] Response status: ${response.status}`);
+      console.log(`[getPortfolioPositions] Response data keys: ${Object.keys(response.data || {})}`);
+      
+      return response.data;
+    } catch (err: any) {
+      console.error('Error fetching portfolio positions:', err);
+      console.log(`[getPortfolioPositions] Error status: ${err.response?.status}`);
+      console.log(`[getPortfolioPositions] Error data: ${JSON.stringify(err.response?.data || {})}`);
+      
+      // Try an alternative endpoint if the first one fails with 404
+      if (err.response?.status === 404) {
+        try {
+          console.log(`[getPortfolioPositions] Trying alternative endpoint: ${this.baseUrl}/wallet/portfolio`);
+          
+          const altResponse = await axios.get(`${this.baseUrl}/wallet/portfolio`, {
+            headers: {
+              accept: 'application/json',
+              'X-API-Key': this.apiKey
+            },
+            params: {
+              address
+            }
+          });
+          
+          console.log(`[getPortfolioPositions] Alternative response status: ${altResponse.status}`);
+          console.log(`[getPortfolioPositions] Alternative response data keys: ${Object.keys(altResponse.data || {})}`);
+          
+          return altResponse.data;
+        } catch (altErr: any) {
+          console.error('Error fetching from alternative endpoint:', altErr);
+          console.log(`[getPortfolioPositions] Alternative error status: ${altErr.response?.status}`);
+          console.log(`[getPortfolioPositions] Alternative error data: ${JSON.stringify(altErr.response?.data || {})}`);
+        }
+      }
+      
+      return null;
+    }
+  }
+
+  async getPortfolioTrend(address: string, timeframe = '30d'): Promise<any> {
+    try {
+      console.log(`[getPortfolioTrend] Fetching portfolio trend for address: ${address}, timeframe: ${timeframe}`);
+      console.log(`[getPortfolioTrend] API URL: ${this.baseUrl}/wallet/value/trended`);
+      console.log(`[getPortfolioTrend] API Key: ${this.apiKey ? this.apiKey.substring(0, 4) + '...' : 'missing'}`);
+      
+      const response = await axios.get(`${this.baseUrl}/wallet/value/trended`, {
+        headers: {
+          accept: 'application/json',
+          'X-API-Key': this.apiKey
+        },
+        params: {
+          address,
+          timeframe
+        }
+      });
+
+      console.log(`[getPortfolioTrend] Response status: ${response.status}`);
+      console.log(`[getPortfolioTrend] Response data type: ${typeof response.data}`);
+      console.log(`[getPortfolioTrend] Response data length: ${Array.isArray(response.data) ? response.data.length : 'not an array'}`);
+      
+      return response.data;
+    } catch (err: any) {
+      console.error('Error fetching portfolio trend:', err);
+      console.log(`[getPortfolioTrend] Error status: ${err.response?.status}`);
+      console.log(`[getPortfolioTrend] Error data: ${JSON.stringify(err.response?.data || {})}`);
+      
+      // If the API doesn't support this endpoint, use our own implementation
+      try {
+        console.log(`[getPortfolioTrend] Falling back to calculating trend from wallet trades`);
+        // Get wallet trades to calculate portfolio value over time
+        const trades = await this.getWalletTrades(address);
+        console.log(`[getPortfolioTrend] Retrieved ${trades?.length || 0} trades for calculation`);
+        
+        if (trades && trades.length > 0) {
+          return this.calculatePortfolioTrend(trades, timeframe);
+        } else {
+          console.log(`[getPortfolioTrend] No trades found for calculation`);
+        }
+      } catch (innerErr: any) {
+        console.error('Error calculating portfolio trend from trades:', innerErr);
+        console.log(`[getPortfolioTrend] Inner error message: ${innerErr.message}`);
+      }
+      
+      // Return empty array if all methods fail
+      console.log(`[getPortfolioTrend] All methods failed, returning empty array`);
+      return [];
+    }
+  }
+
+  // Calculate portfolio trend from trades
+  private calculatePortfolioTrend(trades: any[], timeframe: string): any[] {
+    console.log('Calculating portfolio trend from trades:', trades.length);
+    
+    // Sort trades by date
+    const sortedTrades = [...trades].sort((a, b) => 
+      new Date(a.time).getTime() - new Date(b.time).getTime()
+    );
+    
+    // Get start date based on timeframe
+    const now = new Date();
+    let days = 30;
+    
+    if (timeframe === '7d') days = 7;
+    if (timeframe === '14d') days = 14;
+    if (timeframe === '30d') days = 30;
+    if (timeframe === '90d') days = 90;
+    if (timeframe === '180d') days = 180;
+    if (timeframe === '1y') days = 365;
+    if (timeframe === 'all') days = 1825; // 5 years
+    
+    const startDate = new Date(now);
+    startDate.setDate(startDate.getDate() - days);
+    
+    // Filter trades by date
+    const filteredTrades = sortedTrades.filter(trade => 
+      new Date(trade.time) >= startDate
+    );
+    
+    console.log('Filtered trades:', filteredTrades.length);
+    
+    // Calculate cumulative portfolio value
+    let portfolioValue = 0;
+    const dataPoints: {time: number; value: number}[] = [];
+    
+    // Group trades by day
+    const tradesByDay = new Map<string, number>();
+    
+    filteredTrades.forEach(trade => {
+      const date = new Date(trade.time);
+      const dateKey = Math.floor(date.getTime() / 1000); // Convert to seconds
+      
+      const isBuy = trade.action.toLowerCase().includes('buy');
+      const changeAmount = trade.adaAmount || 0;
+      
+      if (isBuy) {
+        portfolioValue += changeAmount;
+      } else {
+        portfolioValue -= changeAmount;
+      }
+      
+      tradesByDay.set(dateKey.toString(), portfolioValue);
+    });
+    
+    // Convert to array of data points
+    for (const [time, value] of tradesByDay.entries()) {
+      dataPoints.push({
+        time: parseInt(time),
+        value: Math.max(0, value) // Ensure value is not negative
+      });
+    }
+    
+    console.log('Generated data points:', dataPoints.length);
+    
+    // If we have no data points, create a default one
+    if (dataPoints.length === 0) {
+      dataPoints.push({
+        time: Math.floor(Date.now() / 1000),
+        value: 0
+      });
+    }
+    
+    return dataPoints;
   }
 } 

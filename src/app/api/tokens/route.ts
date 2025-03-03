@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
+const baseUrl = 'https://openapi.taptools.io/api/v1';
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const address = searchParams.get('address');
@@ -18,7 +20,7 @@ export async function GET(request: Request) {
   try {
     console.log('Fetching tokens for address:', address);
     
-    const response = await axios.get('https://openapi.taptools.io/api/v1/address/tokens', {
+    const response = await axios.get(`${baseUrl}/address/tokens`, {
       headers: {
         'accept': 'application/json',
         'X-API-Key': apiKey

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
+const baseUrl = 'https://openapi.taptools.io/api/v1';
+
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
@@ -16,7 +18,7 @@ export async function GET(request: Request) {
   try {
     console.log('Fetching holders for:', { unit, limit });
 
-    const response = await axios.get('https://openapi.taptools.io/api/v1/token/holders/top', {
+    const response = await axios.get(`${baseUrl}/token/holders/top`, {
       headers: {
         'accept': 'application/json',
         'X-API-Key': process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || ''
