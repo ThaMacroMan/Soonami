@@ -305,7 +305,17 @@ export class TapToolsService {
     try {
       console.log('Getting holders for unit:', unit, 'with options:', options);
       
-      const response = await axios.get('/api/token-holders', {
+      const apiKey = process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY;
+      if (!apiKey) {
+        console.error('NEXT_PUBLIC_TAPTOOLS_API_KEY is not set in environment variables');
+        return [];
+      }
+
+      const response = await axios.get(`${this.baseUrl}/token/holders/top`, {
+        headers: {
+          'accept': 'application/json',
+          'X-API-Key': apiKey
+        },
         params: {
           unit,
           limit: options.perPage || 50
