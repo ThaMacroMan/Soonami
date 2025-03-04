@@ -193,7 +193,7 @@ function CardanoTokens({
 
   // Create textured sphere function
   const createTexturedSphere = async (size: number, position: THREE.Vector3, imageUrl: string): Promise<THREE.Mesh> => {
-      const textureLoader = new THREE.TextureLoader()
+      const textureLoader = new (THREE as any).TextureLoader()
       
       return new Promise<THREE.Mesh>((resolve) => {
         // Create a default colored sphere as fallback with vibrant color
@@ -221,17 +221,17 @@ function CardanoTokens({
         // Try to load the texture
         textureLoader.load(
           imageUrl,
-          (texture: THREE.Texture) => {
+          (texture: any) => {
             try {
               // Higher segment count for smoother spheres
               const geometry = new THREE.SphereGeometry(size, 32, 32)
               
               // Enhance texture brightness and contrast
-              texture.colorSpace = THREE.SRGBColorSpace
+              texture.colorSpace = (THREE as any).SRGBColorSpace
               
               // Apply texture filtering for sharper appearance
-              texture.minFilter = THREE.LinearFilter
-              texture.magFilter = THREE.LinearFilter
+              texture.minFilter = (THREE as any).LinearFilter
+              texture.magFilter = (THREE as any).LinearFilter
               texture.anisotropy = 16 // Higher anisotropy for sharper textures at angles
               
               // Create a more vibrant material for the textured spheres with deeper colors
@@ -265,13 +265,13 @@ function CardanoTokens({
               if (size > 1) { // Only add glow to larger spheres
                 const glowSize = size * 1.15;
                 const glowGeometry = new THREE.SphereGeometry(glowSize, 32, 32);
-                const glowMaterial = new THREE.MeshBasicMaterial({
+                const glowMaterial = new (THREE as any).MeshBasicMaterial({
                   color: 0xffffff,
                   transparent: true,
                   opacity: 0.15,
-                  side: THREE.BackSide
+                  side: (THREE as any).BackSide
                 } as any); // Type cast to bypass type checking
-                const glowMesh = new THREE.Mesh(glowGeometry, glowMaterial);
+                const glowMesh = new (THREE as any).Mesh(glowGeometry, glowMaterial);
                 mesh.add(glowMesh); // Add as child to follow parent's position
               }
               
@@ -282,7 +282,7 @@ function CardanoTokens({
             }
           },
           undefined,
-          (error) => {
+          (error: any) => {
             console.warn('Error loading texture:', error)
             resolve(createFallbackSphere())
           }
@@ -360,8 +360,8 @@ function CardanoTokens({
         starsVertices.push(x, y, z);
       }
 
-      starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
-      const starField = new THREE.Points(starsGeometry, starsMaterial);
+      starsGeometry.setAttribute('position', new (THREE as any).Float32BufferAttribute(starsVertices, 3));
+      const starField = new (THREE as any).Points(starsGeometry, starsMaterial);
       scene.add(starField);
       
       console.log('✨ Added starry background with 2000 stars');
@@ -687,7 +687,6 @@ function CardanoTokens({
     
     // Update the global showLabels value for new beams
     if (typeof window !== 'undefined') {
-      // @ts-expect-error: Adding custom property to window object for global label visibility
       window.__showLabelsGlobal = showLabels;
     }
     
@@ -865,8 +864,8 @@ function createBeam(
       new THREE.Vector3(fromX, fromY, fromZ),
       new THREE.Vector3(fromX + 0.001, fromY + 0.001, fromZ + 0.001)
     ];
-    const dummyCurve = new THREE.CatmullRomCurve3(dummyPoints as any);
-    const geometry = new THREE.TubeGeometry(dummyCurve, 1, 0.001, 3, false);
+    const dummyCurve = new (THREE as any).CatmullRomCurve3(dummyPoints as any);
+    const geometry = new (THREE as any).TubeGeometry(dummyCurve, 1, 0.001, 3, false);
     console.log(`🔷 Created minimal initial geometry to prevent shadow`);
   
     // Determine color based on action type
@@ -892,11 +891,11 @@ function createBeam(
     }
     
     // Use MeshStandardMaterial for a more solid appearance
-    const material = new THREE.MeshStandardMaterial({
+    const material = new (THREE as any).MeshStandardMaterial({
       color: beamColor,
       transparent: true,
       opacity: 0, // Start with zero opacity to make it invisible
-      side: THREE.FrontSide, // Use FrontSide instead of DoubleSide for solid appearance
+      side: (THREE as any).FrontSide, // Use FrontSide instead of DoubleSide for solid appearance
       metalness: 0.3,
       roughness: 0.4,
       emissive: beamColor,
@@ -1032,7 +1031,7 @@ function createBeam(
             }
             
             // Create a new curve with just the visible points
-            const visibleCurve = new THREE.CatmullRomCurve3(visiblePoints as any);
+            const visibleCurve = new (THREE as any).CatmullRomCurve3(visiblePoints as any);
             
             // Create a new geometry for the visible portion with tapering
             // Calculate tapering at the ends
@@ -1122,9 +1121,9 @@ function createBeam(
             }
             
             // Set the attributes
-            newGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-            newGeometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
-            newGeometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+            newGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
+            newGeometry.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(normals), 3));
+            newGeometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
             // Use type assertion to fix linter error
             (newGeometry as any).setIndex(indices);
             
