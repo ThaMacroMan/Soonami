@@ -499,7 +499,7 @@ export const LiveTradeStream = forwardRef<LiveTradeStreamRef, LiveTradeStreamPro
       }
       
       // Create request URL and log detailed request info
-      const url = `/beam/api/trades?${params.toString()}`;
+      const url = `/Beam/api/trades?${params.toString()}`;
       console.log(`[${requestId}] TRADE REQUEST:
         Token: ${unit.slice(0, 8)}...${unit.slice(-8)}
         Timeframe: ${timeframe}

@@ -1585,7 +1585,7 @@ export default function BeamPage() {
       const limit = Math.min(100, maxRingValue + 10); // Add a buffer of 10 tokens
       
       console.log(`Requesting ${limit} tokens in a single API call`);
-      const response = await fetch(`/beam/api/tokens?type=${type}&limit=${limit}&page=1`);
+      const response = await fetch(`/Beam/api/tokens?type=${type}&limit=${limit}&page=1`);
       
       if (!response.ok) {
         throw new Error(`API error: ${response.status}`);

@@ -17,7 +17,7 @@ export default function Home() {
     {
       title: "Cardano Beam transaction Viewer",
       description: "Explore token holder distributions and concentrations",
-      link: "/beam",
+      link: "/Beam",
       gradient: "from-purple-500/20 to-blue-500/20",
       image: "/beam.png"
     },
