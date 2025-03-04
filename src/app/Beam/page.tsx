@@ -11,9 +11,6 @@ import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRe
 import { Timeline } from './Timeline'
 import dynamic from 'next/dynamic'
 
-// Import SolarSystemTokens from Solar page
-import { SolarSystemTokens } from '../Solar/SolarSystemComponent'
-
 // Use dynamic import with ssr: false for LiveTradeStream to prevent server-side rendering
 const DynamicLiveTradeStream = dynamic(
   () => import('./livetrades').then((mod) => mod.LiveTradeStream),
