@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { Container, Typography, Button, List, ListItem, ListItemButton, ListItemText, Dialog, DialogTitle, DialogContent, Box, CircularProgress, Fade } from '@mui/material'
-import WalletConnectors from '../components/WalletConnectors'
 import { Wallet } from '../types/cardano'
 import Link from 'next/link'
 import tokenListJson from '../../algos/data/token_list.json'
@@ -1260,17 +1259,6 @@ export default function WhaleWatchingPage() {
             SOONAMI
           </Typography>
         </Link>
-      </div>
-
-      {/* Wallet Connection Section - Top Right */}
-      <div className="absolute top-4 right-4">
-        {!address ? (
-          <WalletConnectors onConnectWallet={onConnectWallet} />
-        ) : (
-          <span className="text-sm text-white/70">
-            Connected: {address.slice(0, 8)}...{address.slice(-8)}
-          </span>
-        )}
       </div>
  
       <Container maxWidth="xl" sx={{ py: 4 }}>

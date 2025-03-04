@@ -1,8 +1,7 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Container, Typography} from '@mui/material'
-import WalletConnectors from '../components/WalletConnectors'
 import { Wallet } from '../types/cardano'
 import Link from 'next/link'
 import * as THREE from 'three'
@@ -2107,15 +2106,6 @@ export default function BeamPage() {
         </Link>
       </div>
 
-      <div className="absolute top-4 right-4">
-        {!address ? (
-          <WalletConnectors onConnectWallet={onConnectWallet} />
-        ) : (
-          <span className="text-sm text-white/70">
-            Connected: {address.slice(0, 8)}...{address.slice(-8)}
-          </span>
-        )}
-      </div>
 
       {apiLoading && (
         <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-blue-900/80 text-white px-4 py-2 rounded-lg z-50 animate-pulse mt-16">
