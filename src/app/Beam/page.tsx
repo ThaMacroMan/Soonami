@@ -211,7 +211,8 @@ function CardanoTokens({
       `);
       
       return points
-    }
+    } 
+    //
 
   // Create textured sphere function
   const createTexturedSphere = async (size: number, position: THREE.Vector3, imageUrl: string): Promise<THREE.Mesh> => {
