@@ -1313,7 +1313,6 @@ export default function WhaleWatchingPage() {
             isPlaying={isPlaying}
             onTimeChange={handleTimeChange}
             onPlayPause={handlePlayPause}
-            speedMultiplier={speedMultiplier}
             onLiveModeToggle={handleLiveModeToggle}
             isLiveMode={isLiveMode}
           />
