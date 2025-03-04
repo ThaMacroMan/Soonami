@@ -1,15 +1,9 @@
 "use client";
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { TapToolsService } from '@/algos/taptools';
-import { Autocomplete as HeroAutocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import tokenListData from '@/algos/data/token_list.json';
 import axios from 'axios';
-import Image from 'next/image';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea } from 'recharts';
-
-const tapTools = new TapToolsService(process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || '');
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 const timeFrameOptions = [
   { label: "All Time", value: "all" },
@@ -45,13 +39,6 @@ interface TokenData {
 // Type assertion for token list
 const tokenList = (tokenListData as TokenListData).tokens;
 
-// Define the Token interface
-interface Token {
-  liquidity: number;
-  price: number;
-  ticker: string;
-  unit: string;
-}
 
 interface AutocompleteProps {
   onSelect: (unit: string) => void;
@@ -76,8 +63,8 @@ const TokenAutocomplete: React.FC<AutocompleteProps> = ({ onSelect }) => {
   }, [query]);
 
   const handleSelect = (token: TokenData | 'all' = 'all') => {
-    setQuery('All Tokens');
-    onSelect('all');
+    setQuery(token === 'all' ? 'All Tokens' : token.ticker);
+    onSelect(token === 'all' ? 'all' : token.unit);
     setIsOpen(false);
   };
 
@@ -121,8 +108,8 @@ export default function AddressPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('portfolio');
   const [trades, setTrades] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(5);
+  const [currentPage, ] = useState(1);
+  const [totalPages, ] = useState(5);
   const [tokenName, setTokenName] = useState<string | null>(null);
 
   // Add new state for filtered trades

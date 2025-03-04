@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, ReactElement, useCallback } from 'react'
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, ReactElement } from 'react'
 
 
 interface Trade {
@@ -41,7 +41,6 @@ export const LiveTradeStream = forwardRef<LiveTradeStreamRef, LiveTradeStreamPro
   solarTokens, 
   onNewTrade,
   refreshInterval = 2000,
-  autoReconnect = true,
   speedMultiplier = 1,
   enabled = true,
   isPlaying = true,
@@ -55,10 +54,10 @@ export const LiveTradeStream = forwardRef<LiveTradeStreamRef, LiveTradeStreamPro
   
   const [trades, setTrades] = useState<any[]>([]);
   const [isHidden, setIsHidden] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [, setError] = useState<string | null>(null);
+  const [, setLoading] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [displayMode, setDisplayMode] = useState<'live' | 'historical'>(isLiveMode ? 'live' : 'historical');
+  const [, setDisplayMode] = useState<'live' | 'historical'>(isLiveMode ? 'live' : 'historical');
   const tradesRef = useRef<HTMLDivElement>(null);
   const lastTradeTimeRef = useRef<number>(startTime);
   const autoScrollRef = useRef<boolean>(true);
@@ -373,7 +372,7 @@ export const LiveTradeStream = forwardRef<LiveTradeStreamRef, LiveTradeStreamPro
 
       // Enhanced EXTREME slow speed handling for flash animation and trade processing
       let flashDuration = 3000;
-      let currentSpeedMultiplier = speedMultiplierRef.current;
+      const currentSpeedMultiplier = speedMultiplierRef.current;
       
       // Apply progressively stronger slowdown factors as the speed gets lower
       let effectiveSpeed = currentSpeedMultiplier;

@@ -1,8 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
-import { Container, Typography, Button, List, ListItem, ListItemButton, ListItemText, Dialog, DialogTitle, DialogContent, Box, CircularProgress, Fade } from '@mui/material'
-import { Wallet } from '../types/cardano'
+import { Container, Typography, List,  ListItemButton, ListItemText, Dialog, DialogTitle, DialogContent, Box, CircularProgress } from '@mui/material'
 import Link from 'next/link'
 import tokenListJson from '../../algos/data/token_list.json'
 import { TapToolsService } from './taptools'
@@ -56,13 +55,11 @@ interface LiveTradeStreamProps {
   solarTokens: any[];
   onNewTrade?: (trade: Trade) => void;
   refreshInterval?: number;
-  autoReconnect?: boolean;
   speedMultiplier?: number;
   enabled?: boolean;
   isPlaying?: boolean;
   startTime?: number;
   currentTime?: number;
-  onTimeUpdate?: (time: number) => void;
   setApiLoading?: (loading: boolean) => void;
   isLiveMode?: boolean;
 }
@@ -77,13 +74,11 @@ const LiveTradeStream = forwardRef<LiveTradeStreamRef, LiveTradeStreamProps>(({
   solarTokens, 
   onNewTrade,
   refreshInterval = 2000,
-  autoReconnect = true,
   speedMultiplier = 1,
   enabled = true,
   isPlaying = true,
   startTime = Math.floor(Date.now() / 1000) - (30 * 24 * 3600),
   currentTime = Math.floor(Date.now() / 1000),
-  onTimeUpdate,
   setApiLoading,
   isLiveMode = false
 }, ref) => {
@@ -99,11 +94,9 @@ const LiveTradeStream = forwardRef<LiveTradeStreamRef, LiveTradeStreamProps>(({
   const processingTradesRef = useRef<boolean>(false);
   const hasInitializedRef = useRef<boolean>(false);
   const fetchIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const initialFetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const speedMultiplierRef = useRef<number>(speedMultiplier);
   const currentPageRef = useRef<number>(1);
   const perPageRef = useRef<number>(100);
-  const apiSuccessCountRef = useRef<number>(0);
   const apiFailureCountRef = useRef<number>(0);
   const processedTradeHashesRef = useRef<Set<string>>(new Set());
   const isLiveModeRef = useRef<boolean>(isLiveMode);
@@ -498,7 +491,6 @@ function SolarSystemTokens({ tokens, onSelectToken }: { tokens: any[], onSelectT
   const [tokenCount, setTokenCount] = useState(20);
   const [showLabels, setShowLabels] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
-  const tapTools = new TapToolsService(process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || '');
   const tradeVolumeRef = useRef<{ [key: string]: number }>({});
   const baseOrbitSpeedRef = useRef<{ [key: string]: number }>({});
   const planetsRef = useRef<any[]>([]);
@@ -759,14 +751,6 @@ function SolarSystemTokens({ tokens, onSelectToken }: { tokens: any[], onSelectT
       return 0.75 + (4 * normalized); // Scale from 0.75 to 4.75
     };
 
-    const formatLiquidity = (liquidity: number) => {
-      if (liquidity >= 1e6) {
-        return `$${(liquidity / 1e6).toFixed(1)}M`;
-      } else if (liquidity >= 1e3) {
-        return `$${(liquidity / 1e3).toFixed(1)}K`;
-      }
-      return `$${liquidity.toFixed(1)}`;
-    };
 
     const planets: any[] = [];
     const baseDistance = 12;
@@ -1063,7 +1047,6 @@ function SolarSystemTokens({ tokens, onSelectToken }: { tokens: any[], onSelectT
 }
 
 export default function WhaleWatchingPage() {
-  const [address, setAddress] = useState<string>('')
   const [showTokenList, setShowTokenList] = useState(false)
   const [selectedToken, setSelectedToken] = useState<any>(null)
   const [whaleData, setWhaleData] = useState<Holder[]>([])
@@ -1076,7 +1059,7 @@ export default function WhaleWatchingPage() {
   const [currentTime, setCurrentTime] = useState<number>(Math.floor(Date.now() / 1000))
   const [startTime, setStartTime] = useState<number>(Math.floor(Date.now() / 1000) - (30 * 24 * 60 * 60)) // 30 days ago
   const [isPlaying, setIsPlaying] = useState<boolean>(false)
-  const [speedMultiplier, setSpeedMultiplier] = useState<number>(1)
+  const [speedMultiplier, ] = useState<number>(1)
   const [isLiveMode, setIsLiveMode] = useState<boolean>(true)
 
   // Initialize TapToolsService with API key
@@ -1154,15 +1137,6 @@ export default function WhaleWatchingPage() {
     return new Date(timestamp * 1000).toLocaleString()
   }
 
-  const onConnectWallet = async (wallet: Wallet) => {
-    try {
-      const api = await wallet.enable()
-      const [addr] = await api.getUsedAddresses()
-      setAddress(addr)
-    } catch (error) {
-      console.error('Failed to connect wallet:', error)
-    }
-  }
 
   // Timeline handlers
   const handleTimeChange = (newTime: number) => {
@@ -1365,7 +1339,7 @@ export default function WhaleWatchingPage() {
           </DialogTitle>
           <DialogContent>
             <List sx={{ maxHeight: '70vh', overflow: 'auto' }}>
-              {tokenList.tokens.map((token, index) => (
+              {tokenList.tokens.map((token) => (
                 <ListItemButton 
                   key={token.unit}
                   onClick={() => handleTokenSelect(token)}

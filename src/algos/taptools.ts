@@ -8,17 +8,6 @@ export interface TapToolsVolumeToken {
   [key: string]: any;
 }
 
-interface PortfolioPosition {
-  tokenName?: string;
-  policyId?: string;
-  amount?: number;
-  liquidValue?: number;
-}
-
-interface PortfolioResponse {
-  positionsFt: PortfolioPosition[];
-}
-
 export class TapToolsService {
   private readonly apiKey: string;
   private readonly baseUrl = 'https://openapi.taptools.io/api/v1';
@@ -353,7 +342,7 @@ export class TapToolsService {
         console.log(`Found ${addressInfo.addresses.length} payment addresses for stake address:`, address);
         
         // Fetch tokens for each payment address and combine results
-        let allTokens: any[] = [];
+        const allTokens: any[] = [];
         const processedPolicyIds = new Set(); // To avoid duplicate tokens
         
         for (const paymentAddress of addressInfo.addresses) {

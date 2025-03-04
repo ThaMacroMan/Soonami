@@ -1,26 +1,7 @@
 import { NextResponse } from 'next/server';
 import { TapToolsService } from '@/algos/taptools';
 
-interface WalletPosition {
-  adaBalance: number;
-  adaValue: number;
-  liquidValue: number;
-  numFTs: number;
-  numNFTs: number;
-  positionsFt: {
-    '24h': number;
-    '30d': number;
-    '7d': number;
-    adaValue: number;
-    balance: number;
-    fingerprint: string;
-    liquidBalance: number;
-    liquidValue: number;
-    price: number;
-    ticker: string;
-    unit: string;
-  }[];
-}
+
 
 interface Trade {
   token?: string;
@@ -33,6 +14,14 @@ interface Trade {
   tokenBName?: string;
   tokenAAmount?: string | number;
   tokenBAmount?: string | number;
+}
+
+interface Position {
+  ticker: string;
+  unit: string;
+  balance: number;
+  adaValue: number;
+  '24h': number;
 }
 
 const tapTools = new TapToolsService(process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || '');
@@ -75,7 +64,7 @@ export async function GET(request: Request) {
       console.log(`Found ${positions.positionsFt.length} positions in wallet`);
       
       // Process positions and calculate totals from trades
-      const holdings = positions.positionsFt.map((position) => {
+      const holdings = positions.positionsFt.map((position: Position) => {
         console.log('Processing position:', {
           ticker: position.ticker,
           unit: position.unit

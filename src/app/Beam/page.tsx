@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useRef } from 'react'
 import { Container, Typography} from '@mui/material'
-import { Wallet } from '../types/cardano'
 import Link from 'next/link'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
@@ -67,7 +66,7 @@ async function fetchAssetMetadata(assetId: string) {
       console.log(`Using onchain image URL: ${imageUrl}`);
       return imageUrl;
     }
-  } catch (error) {
+  } catch {
     console.warn(`Error fetching metadata for ${assetId}, using default image`);
   }
   
@@ -77,17 +76,10 @@ async function fetchAssetMetadata(assetId: string) {
 function CardanoTokens({ 
   tokens, 
   tokenCount,
-  setTokenCount,
-  onSelectToken,
   planetsRef,
   onSceneReady,
-  speedMultiplier,
-  setSpeedMultiplier,
   onOrbsReady,
-  loadTokensFromAPI,
-  isLoadingTokens,
   showLabels,
-  setShowLabels
 }: { 
   tokens: any[], 
   tokenCount: number,
@@ -106,23 +98,9 @@ function CardanoTokens({
   const containerRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<THREE.Scene | null>(null)
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null)
-  // Remove the local showLabels state since it's now a prop
-  const speedMultiplierRef = useRef<number>(speedMultiplier)
-  const hasInitializedRef = useRef(false)
-  const [activeRings, setActiveRings] = useState<string[]>(["Inner"])
   const animationFrameRef = useRef<number | null>(null)
   const controlsRef = useRef<any>(null)
   
-  // Define ring configurations
-  const ringConfigs = [
-    { name: "Inner", value: 7, tooltip: "Show inner ring tokens (7)" },
-    { name: "Middle", value: 14, tooltip: "Show middle ring tokens (14)" },
-    { name: "Outer", value: 28, tooltip: "Show outer ring tokens (28)" },
-    { name: "Extra", value: 36, tooltip: "Show extra ring tokens (36)" },
-    { name: "Extended", value: 50, tooltip: "Show extended ring tokens (50)" },
-    { name: "All", value: 64, tooltip: "Show all tokens (64)" }
-  ]
-
   // Create Cardano pattern function
     const createCardanoPattern = () => {
       const points: THREE.Vector3[] = []
@@ -392,7 +370,7 @@ function CardanoTokens({
     };
     
     // Add stars to the scene
-    const starField = createStarryBackground();
+    createStarryBackground();
 
     // Camera setup
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000)
@@ -658,43 +636,6 @@ function CardanoTokens({
     }
   }, [tokenCount, tokens]) // Reinitialize when tokenCount or tokens change
 
-  // Handle ring selection
-  const handleRingSelection = (ring: { name: string, value: number }) => {
-    console.log(`Ring selected: ${ring.name} (${ring.value} tokens)`);
-    
-    // Special case for "All" - it includes all rings
-    if (ring.name === "All") {
-      setActiveRings(ringConfigs.map(r => r.name));
-      setTokenCount(ring.value);
-      return;
-    }
-    
-    // Find the index of the selected ring
-    const ringIndex = ringConfigs.findIndex(r => r.name === ring.name);
-    
-    // If the ring is already active, remove it and all higher rings
-    if (activeRings.includes(ring.name)) {
-      const prevRingValue = ringIndex > 0 ? ringConfigs[ringIndex - 1].value : 0;
-      const newActiveRings = activeRings.filter(r => {
-        const rIndex = ringConfigs.findIndex(config => config.name === r);
-        return rIndex < ringIndex;
-      });
-      
-      setActiveRings(newActiveRings);
-      setTokenCount(prevRingValue);
-      console.log(`Removed ring: ${ring.name}, new token count: ${prevRingValue}`);
-    } 
-    // If the ring is not active, add it and all lower rings
-    else {
-      const newActiveRings = ringConfigs
-        .filter((_, i) => i <= ringIndex)
-        .map(r => r.name);
-      
-      setActiveRings(newActiveRings);
-      setTokenCount(ring.value);
-      console.log(`Added ring: ${ring.name}, new token count: ${ring.value}`);
-    }
-  };
 
   // Effect to handle showLabels changes
   useEffect(() => {
@@ -746,9 +687,10 @@ function CardanoTokens({
     
     // Update the global showLabels value for new beams
     if (typeof window !== 'undefined') {
-      // @ts-ignore
+      // @ts-expect-error: Adding custom property to window object for global label visibility
       window.__showLabelsGlobal = showLabels;
     }
+    
   }, [showLabels]);
 
   // Add a combined effect to ensure all labels are updated consistently
@@ -817,9 +759,7 @@ function createBeam(
   console.log(`🔍 From orb position: ${JSON.stringify(fromOrb.position)}`);
   console.log(`🔍 To orb position: ${JSON.stringify(toOrb.position)}`);
   
-  // Store the initial speed multiplier value
-  const speedMultiplierAtCreation = speedMultiplier;
-  
+
   // Create a function to get the current speed multiplier
   // This will be used during animation to adapt to speed changes
   const getCurrentSpeedMultiplier = () => speedMultiplier;
@@ -918,10 +858,6 @@ function createBeam(
     console.log(`📍 First point: ${JSON.stringify(points[0])}`);
     console.log(`📍 Middle point: ${JSON.stringify(points[Math.floor(segments/2)])}`);
     console.log(`📍 Last point: ${JSON.stringify(points[segments])}`);
-    
-    // Create the curve with the points
-    const curve = new THREE.CatmullRomCurve3(points as any);
-    console.log(`🔄 Created CatmullRomCurve3 with ${points.length} points`);
     
     // Create an initial minimal geometry instead of the full tube
     // This prevents the shadow of the entire beam from appearing at the start
@@ -1060,7 +996,7 @@ function createBeam(
     
       // Use the current speed multiplier for real-time speed adjustment
       // Ensure a minimum speed for visibility
-      let effectiveSpeed = Math.max(0.1, getCurrentSpeedMultiplier());
+      const effectiveSpeed = Math.max(0.1, getCurrentSpeedMultiplier());
       
       // Calculate duration based on speed
       const duration = baseDuration / effectiveSpeed;
@@ -1407,8 +1343,7 @@ function TokenSelector({
 
 // Export the main page component
 export default function BeamPage() {
-  const [address, setAddress] = useState<string>('')
-  const [selectedToken, setSelectedToken] = useState<any>(null)
+  const [, setSelectedToken] = useState<any>(null)
   const [visibleTokens, setVisibleTokens] = useState<any[]>([])
   const [speedMultiplier, setSpeedMultiplier] = useState<number>(0.33)
   const [orbsReady, setOrbsReady] = useState(false)
@@ -1421,9 +1356,7 @@ export default function BeamPage() {
   const [allTokens, setAllTokens] = useState<any[]>([])
   // Add state for LIVE MODE - default to true for live mode on page load
   const [isLiveMode, setIsLiveMode] = useState(true)
-  // Add state for visualization mode - 'beam' or 'solar'
-  const [visualizationMode, setVisualizationMode] = useState<'beam' | 'solar'>('beam')
-  
+
   // Define ring configurations
   const ringConfigs = [
     { name: "Inner", value: 7, tooltip: "Show inner ring tokens (7)" },
@@ -1493,13 +1426,6 @@ export default function BeamPage() {
         }
       }, 50);
     }
-  };
-
-  // Handle visualization mode toggle
-  const handleVisualizationModeToggle = () => {
-    const newMode = visualizationMode === 'beam' ? 'solar' : 'beam';
-    console.log(`Switching visualization mode from ${visualizationMode} to ${newMode}`);
-    setVisualizationMode(newMode);
   };
 
   // Update time every second when playing (but not in LIVE MODE)
@@ -1667,7 +1593,7 @@ export default function BeamPage() {
       }
       
       const data = await response.json();
-      let tokens: any[] = [];
+      const tokens: any[] = [];
       
       if (data.tokens && Array.isArray(data.tokens)) {
         console.log(`API returned ${data.tokens.length} tokens`);
@@ -1802,71 +1728,6 @@ export default function BeamPage() {
     }
   };
 
-  const handleTrade = (trade: any) => {
-    if (!planetsRef.current || !sceneRef.current) {
-      console.warn('Scene or planets not ready for trade visualization')
-      return
-    }
-
-    console.log('Processing trade:', trade)
-
-    // Find the token in our visible tokens list
-    const tokenInfo = visibleTokens.find(t => t.unit === trade.token.unit)
-    if (!tokenInfo) {
-      console.warn('Trade token not in visible tokens list, skipping visualization')
-      return
-    }
-
-    const planet = planetsRef.current.find(p => p.token.unit === trade.token.unit)
-    const adaPlanet = planetsRef.current.find(p => p.token.ticker === 'lovelace')
-
-    if (!planet || !adaPlanet) {
-      console.warn('Could not find required planets for trade visualization')
-      return
-    }
-
-    // Determine from and to orbs based on action type
-    let fromOrb, toOrb;
-    
-    switch(trade.action) {
-      case 'buy':
-        fromOrb = adaPlanet.mesh;
-        toOrb = planet.mesh;
-        break;
-      case 'sell':
-        fromOrb = planet.mesh;
-        toOrb = adaPlanet.mesh;
-        break;
-      case 'add_liquidity':
-        // For adding liquidity, beam goes from ADA to token
-        fromOrb = adaPlanet.mesh;
-        toOrb = planet.mesh;
-        break;
-      case 'remove_liquidity':
-        // For removing liquidity, beam goes from token to ADA
-        fromOrb = planet.mesh;
-        toOrb = adaPlanet.mesh;
-        break;
-      case 'zap':
-        // For zap, beam goes from ADA to token (similar to buy)
-        fromOrb = adaPlanet.mesh;
-        toOrb = planet.mesh;
-        break;
-      default:
-        // Default to buy behavior
-        fromOrb = adaPlanet.mesh;
-        toOrb = planet.mesh;
-    }
-    
-    // Calculate total ADA value of the trade
-    const adaValue = Math.abs(trade.tokenBAmount)
-    
-    // Create beam visualization with current speed from ref
-    createBeam(sceneRef.current, fromOrb, toOrb, trade.action, adaValue, speedMultiplierRef.current, showLabels)
-    
-    // Log successful trade visualization
-    console.log(`Created beam for ${trade.action} trade of ${adaValue} ADA with speed ${speedMultiplierRef.current}x`)
-  }
 
   // Handle a new trade by creating a beam
   const handleNewTrade = (trade: any) => {
@@ -2075,16 +1936,6 @@ export default function BeamPage() {
 
   const handleSceneReady = (scene: THREE.Scene) => {
     sceneRef.current = scene
-  }
-
-  const onConnectWallet = async (wallet: Wallet) => {
-    try {
-      const api = await wallet.enable()
-      const [addr] = await api.getUsedAddresses()
-      setAddress(addr)
-    } catch (error) {
-      console.error('Failed to connect wallet:', error)
-    }
   }
 
   // Add the handleApiLoading function

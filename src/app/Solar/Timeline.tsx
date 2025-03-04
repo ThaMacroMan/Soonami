@@ -8,7 +8,6 @@ interface TimelineProps {
   isPlaying: boolean;
   onTimeChange: (time: number) => void;
   onPlayPause: (isPlaying: boolean) => void;
-  speedMultiplier: number;
   onLiveModeToggle?: (isLiveMode: boolean) => void;
   isLiveMode?: boolean;
 }
@@ -20,16 +19,15 @@ export function Timeline({
   isPlaying,
   onTimeChange,
   onPlayPause,
-  speedMultiplier,
   onLiveModeToggle,
   isLiveMode = false
 }: TimelineProps) {
   const [isDragging, setIsDragging] = useState(false);
   const sliderRef = useRef<HTMLDivElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
-  const [formattedTime, setFormattedTime] = useState<string>('');
+  const [, setFormattedTime] = useState<string>('');
   const [absoluteTime, setAbsoluteTime] = useState<string>('');
-  const [timeframeLabel, setTimeframeLabel] = useState<string>('');
+  const [, setTimeframeLabel] = useState<string>('');
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   const [isHovering, setIsHovering] = useState(false);
   const [displayTime, setDisplayTime] = useState<number>(currentTime);

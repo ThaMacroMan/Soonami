@@ -1,12 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Autocomplete, AutocompleteItem } from "@heroui/autocomplete";
 import { TapToolsService } from '@/algos/taptools';
-import Link from 'next/link';
 import Image from 'next/image';
 import tokenListData from '@/algos/data/token_list.json';
-import axios from 'axios';
 
 const tapTools = new TapToolsService(process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || '');
 
@@ -45,12 +42,12 @@ type ViewMode = 'tokens' | 'holders' | 'analysis';
 export default function WalletTracking() {
   const router = useRouter();
   const [selectedToken, setSelectedToken] = useState<TokenOption | null>(null);
-  const [showHolders, setShowHolders] = useState(false);
+
   const [holders, setHolders] = useState<TokenHolder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
+  const [, setSelectedAddress] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('tokens');
 
   // Type assertion for imported JSON
@@ -97,7 +94,6 @@ export default function WalletTracking() {
     if (typeof window !== 'undefined') {
       const urlParams = new URLSearchParams(window.location.search);
       const tokenParam = urlParams.get('token');
-      const tokenNameParam = urlParams.get('tokenName');
       
       if (tokenParam) {
         // Find the token in our options

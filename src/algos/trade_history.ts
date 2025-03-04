@@ -1,21 +1,7 @@
-import { TapToolsService } from './taptools';
 import axios from 'axios';
 
 const API_KEY = process.env.NEXT_PUBLIC_TAPTOOLS_API_KEY || '';
 const baseUrl = 'https://openapi.taptools.io/api/v1';
-const tapTools = new TapToolsService(API_KEY);
-
-interface TradeHistory {
-  action: string;
-  hash: string;
-  time: number;
-  tokenA: string;
-  tokenAAmount: number;
-  tokenAName: string;
-  tokenB: string;
-  tokenBAmount: number;
-  tokenBName: string;
-}
 
 export async function getTokenTradeHistory(address?: string, unit?: string) {
   try {

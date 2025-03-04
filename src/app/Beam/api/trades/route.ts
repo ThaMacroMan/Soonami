@@ -88,7 +88,7 @@ export async function GET(request: Request) {
           // Try to parse error as JSON if possible
           const errorJson = JSON.parse(errorText);
           console.error('Parsed Error JSON:', JSON.stringify(errorJson, null, 2));
-        } catch (e) {
+        } catch {
           // If it's not JSON, just log the text
           console.error('Error Text (not JSON):', errorText);
         }
